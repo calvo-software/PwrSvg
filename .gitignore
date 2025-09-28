@@ -416,3 +416,10 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+# Test output files - generated during testing, not to be committed
+test*.png
+test*.jpg
+test*.jpeg
+test*.bmp
+test*.gif
