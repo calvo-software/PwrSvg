@@ -73,6 +73,9 @@ namespace PwrSvg
         {
             try
             {
+                // Initialize native library loader to ensure SkiaSharp can find libSkiaSharp
+                NativeLibraryLoader.Initialize();
+                
                 // Validate input file
                 if (string.IsNullOrEmpty(Path))
                 {

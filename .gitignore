@@ -426,5 +426,7 @@ test*.gif
 
 # Publish and package output directories
 publish-test/
+publish-net8/
+publish-net48/
 package/
 PowerShellGallery/
