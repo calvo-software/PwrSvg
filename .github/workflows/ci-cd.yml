@@ -88,27 +88,28 @@ jobs:
         dotnet publish PwrSvg/PwrSvg.csproj -c Release -f net48 -o ./package/net48
       shell: pwsh
       
-    - name: Create Unified PowerShell Gallery Package
+    - name: Create Unified PowerShell Gallery Package  
       shell: pwsh
       run: |
         $version = '${{ github.event.release.tag_name }}' -replace '^v', ''
         
-        # Create unified module package structure
+        # Create unified module package structure with subdirectories for each .NET version
+        # This allows a single .psd1 manifest to dynamically load the correct assembly
         $moduleDir = "./PowerShellGallery/PwrSvg"
         New-Item -ItemType Directory -Path $moduleDir -Force
         New-Item -ItemType Directory -Path "$moduleDir/net8" -Force  
         New-Item -ItemType Directory -Path "$moduleDir/net48" -Force
         
-        # Copy .NET 8.0 assemblies and dependencies to net8 subfolder
+        # Copy .NET 8.0 assemblies and dependencies to net8 subfolder (for PowerShell Core)
         Copy-Item "./package/net8/*" "$moduleDir/net8/" -Recurse -Force
         
-        # Copy .NET Framework 4.8 assemblies and dependencies to net48 subfolder  
+        # Copy .NET Framework 4.8 assemblies and dependencies to net48 subfolder (for Windows PowerShell)
         Copy-Item "./package/net48/*" "$moduleDir/net48/" -Recurse -Force
         
-        # Copy the unified manifest to the root
+        # Copy the unified manifest that uses $PSEdition to select the correct assembly
         Copy-Item "PwrSvg/PwrSvg.psd1" $moduleDir
         
-        # Update manifest version
+        # Update manifest version from release tag
         $manifestPath = "$moduleDir/PwrSvg.psd1"
         (Get-Content $manifestPath) -replace "ModuleVersion = '[^']*'", "ModuleVersion = '$version'" | Set-Content $manifestPath
         

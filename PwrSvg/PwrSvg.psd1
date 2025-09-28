@@ -11,6 +11,8 @@
     CLRVersion = '4.0'
 
     # Dynamically determine which assembly to load based on PowerShell edition
+    # PowerShell Core ($PSEdition -eq 'Core') uses .NET 8 assembly from net8/ subdirectory  
+    # Windows PowerShell ($PSEdition -eq 'Desktop' or null) uses .NET Framework 4.8 assembly from net48/ subdirectory
     RootModule = if ($PSEdition -eq 'Core') {
         Join-Path $PSScriptRoot 'net8\PwrSvg.dll'
     } else {
