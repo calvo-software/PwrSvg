@@ -10,8 +10,21 @@
     DotNetFrameworkVersion = '4.8'
     CLRVersion = '4.0'
 
-    # Assemblies that must be loaded prior to importing this module
-    RequiredAssemblies = @('PwrSvg.dll')
+    # Dynamically determine which assembly to load based on PowerShell edition
+    RootModule = if ($PSEdition -eq 'Core') {
+        Join-Path $PSScriptRoot 'net8\PwrSvg.dll'
+    } else {
+        Join-Path $PSScriptRoot 'net48\PwrSvg.dll'
+    }
+    
+    # Also load as required assembly for dependency resolution  
+    RequiredAssemblies = @(
+        if ($PSEdition -eq 'Core') {
+            Join-Path $PSScriptRoot 'net8\PwrSvg.dll'
+        } else {
+            Join-Path $PSScriptRoot 'net48\PwrSvg.dll'
+        }
+    )
 
     # Cmdlets to export from this module
     CmdletsToExport = @('*')

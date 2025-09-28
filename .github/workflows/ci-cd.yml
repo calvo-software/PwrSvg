@@ -80,43 +80,51 @@ jobs:
       
     - name: Build and Publish .NET 8.0
       run: |
-        dotnet publish PwrSvg/PwrSvg.csproj -c Release -f net8.0 -o ./package/net8.0
-        Copy-Item PwrSvg/PwrSvg.psd1 ./package/net8.0/
+        dotnet publish PwrSvg/PwrSvg.csproj -c Release -f net8.0 -o ./package/net8
       shell: pwsh
       
     - name: Build and Publish .NET Framework 4.8
       run: |
         dotnet publish PwrSvg/PwrSvg.csproj -c Release -f net48 -o ./package/net48
-        Copy-Item PwrSvg/PwrSvg.psd1 ./package/net48/
       shell: pwsh
       
-    - name: Create PowerShell Gallery Package (.NET 8.0)
+    - name: Create Unified PowerShell Gallery Package
       shell: pwsh
       run: |
-        $manifestPath = "./package/net8.0/PwrSvg.psd1"
         $version = '${{ github.event.release.tag_name }}' -replace '^v', ''
         
-        # Update manifest version
-        (Get-Content $manifestPath) -replace "ModuleVersion = '[^']*'", "ModuleVersion = '$version'" | Set-Content $manifestPath
-        
-        # Create module package structure
+        # Create unified module package structure
         $moduleDir = "./PowerShellGallery/PwrSvg"
         New-Item -ItemType Directory -Path $moduleDir -Force
-        Copy-Item "./package/net8.0/*" $moduleDir -Recurse -Force
+        New-Item -ItemType Directory -Path "$moduleDir/net8" -Force  
+        New-Item -ItemType Directory -Path "$moduleDir/net48" -Force
         
-    - name: Upload .NET 8.0 Package
+        # Copy .NET 8.0 assemblies and dependencies to net8 subfolder
+        Copy-Item "./package/net8/*" "$moduleDir/net8/" -Recurse -Force
+        
+        # Copy .NET Framework 4.8 assemblies and dependencies to net48 subfolder  
+        Copy-Item "./package/net48/*" "$moduleDir/net48/" -Recurse -Force
+        
+        # Copy the unified manifest to the root
+        Copy-Item "PwrSvg/PwrSvg.psd1" $moduleDir
+        
+        # Update manifest version
+        $manifestPath = "$moduleDir/PwrSvg.psd1"
+        (Get-Content $manifestPath) -replace "ModuleVersion = '[^']*'", "ModuleVersion = '$version'" | Set-Content $manifestPath
+        
+    - name: Upload .NET 8.0 Package  
       uses: actions/upload-artifact@v4
       with:
         name: PwrSvg-net8.0
-        path: ./package/net8.0/
+        path: ./package/net8/
         
     - name: Upload .NET Framework 4.8 Package
       uses: actions/upload-artifact@v4
       with:
-        name: PwrSvg-net48
+        name: PwrSvg-net48  
         path: ./package/net48/
         
-    - name: Upload PowerShell Gallery Package
+    - name: Upload Unified PowerShell Gallery Package
       uses: actions/upload-artifact@v4
       with:
         name: PwrSvg-PSGallery
