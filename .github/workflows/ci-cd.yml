@@ -29,11 +29,6 @@ jobs:
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: ${{ matrix.dotnet-version }}
-        
-    - name: Install .NET Framework targeting pack (Windows only)
-      if: matrix.os == 'windows-latest'
-      run: |
-        choco install dotnet-4.8-devpack -y
     
     - name: Restore dependencies
       run: dotnet restore ${{ env.SOLUTION_FILE }}
@@ -57,11 +52,14 @@ jobs:
         
     - name: Test PowerShell module import (.NET Framework 4.8, Windows only)
       if: matrix.os == 'windows-latest'
-      shell: powershell
       run: |
         dotnet publish PwrSvg/PwrSvg.csproj -c Release -f net48 -o ./publish-net48
-        Import-Module ./publish-net48/PwrSvg.dll -Force
-        Get-Command -Module PwrSvg
+        
+        # Test with Windows PowerShell (powershell.exe)
+        powershell -Command "Import-Module ./publish-net48/PwrSvg.dll -Force; Get-Command -Module PwrSvg"
+        
+        # Test with PowerShell Core (pwsh.exe)  
+        pwsh -Command "Import-Module ./publish-net48/PwrSvg.dll -Force; Get-Command -Module PwrSvg"
 
   package:
     name: Create Packages
@@ -76,9 +74,6 @@ jobs:
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '8.0.x'
-        
-    - name: Install .NET Framework targeting pack
-      run: choco install dotnet-4.8-devpack -y
     
     - name: Restore dependencies
       run: dotnet restore ${{ env.SOLUTION_FILE }}
