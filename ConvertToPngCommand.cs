@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Management.Automation;
+using System.Reflection;
 using SkiaSharp;
 using Svg.Skia;
 
@@ -11,6 +12,9 @@ namespace PwrSvg
     [OutputType(typeof(byte[]))]
     public class ConvertToPngCommand : PSCmdlet
     {
+        private static bool _isInitialized = false;
+        private static readonly object _initLock = new object();
+        
         [Parameter(
             Position = 0,
             Mandatory = true,
@@ -39,6 +43,71 @@ namespace PwrSvg
             HelpMessage = "Quality of the PNG output (1-100, default: 90)")]
         [ValidateRange(1, 100)]
         public int Quality { get; set; } = 90;
+
+        protected override void BeginProcessing()
+        {
+            InitializeSkiaSharp();
+        }
+
+        private void InitializeSkiaSharp()
+        {
+            if (_isInitialized) return;
+            
+            lock (_initLock)
+            {
+                if (_isInitialized) return;
+                
+                try
+                {
+                    // Force native library path resolution
+                    string moduleDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+                    string runtimeDir = Path.Combine(moduleDir, "runtimes");
+                    
+                    if (Directory.Exists(runtimeDir))
+                    {
+                        string arch = Environment.Is64BitProcess ? "x64" : "x86";
+                        string osId = GetOSIdentifier();
+                        string nativeDir = Path.Combine(runtimeDir, $"{osId}-{arch}", "native");
+                        
+                        if (Directory.Exists(nativeDir))
+                        {
+                            // Add native library directory to PATH for library loading
+                            string currentPath = Environment.GetEnvironmentVariable("PATH") ?? "";
+                            if (!currentPath.Contains(nativeDir))
+                            {
+                                Environment.SetEnvironmentVariable("PATH", $"{nativeDir}{Path.PathSeparator}{currentPath}");
+                            }
+                        }
+                    }
+                    
+                    // Force SkiaSharp initialization by creating a simple object
+                    var testBitmap = new SKBitmap(1, 1);
+                    testBitmap.Dispose();
+                    
+                    _isInitialized = true;
+                }
+                catch (Exception ex)
+                {
+                    WriteWarning($"Failed to initialize SkiaSharp: {ex.Message}");
+                }
+            }
+        }
+        
+        private string GetOSIdentifier()
+        {
+            if (Environment.OSVersion.Platform == PlatformID.Win32NT)
+                return "win";
+            if (Environment.OSVersion.Platform == PlatformID.Unix)
+            {
+                if (File.Exists("/etc/alpine-release"))
+                    return "linux-musl";
+                return "linux";
+            }
+            if (Environment.OSVersion.Platform == PlatformID.MacOSX)
+                return "osx";
+            
+            return "linux"; // Default fallback
+        }
 
         protected override void ProcessRecord()
         {
@@ -87,12 +156,13 @@ namespace PwrSvg
         {
             try
             {
-                // Initialize SkiaSharp explicitly
-                var testInfo = SKImageInfo.Empty;
+                // Read SVG content from file
+                string svgContent = File.ReadAllText(svgFilePath);
+                using var stream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(svgContent));
                 
-                // Load the SVG
+                // Load the SVG from stream
                 var svg = new SKSvg();
-                var picture = svg.Load(svgFilePath);
+                var picture = svg.Load(stream);
 
                 if (picture == null)
                 {
@@ -172,12 +242,30 @@ namespace PwrSvg
                     return SKColor.Parse(colorString);
                 }
 
-                // Try to parse as named color
+                // Try to parse as named color using reflection
                 var colorProperty = typeof(SKColors).GetProperty(colorString, 
                     System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.IgnoreCase);
                 if (colorProperty != null)
                 {
                     return (SKColor)colorProperty.GetValue(null);
+                }
+
+                // Try common color names manually
+                switch (colorString.ToLowerInvariant())
+                {
+                    case "white": return SKColors.White;
+                    case "black": return SKColors.Black;
+                    case "red": return SKColors.Red;
+                    case "green": return SKColors.Green;
+                    case "blue": return SKColors.Blue;
+                    case "yellow": return SKColors.Yellow;
+                    case "cyan": return SKColors.Cyan;
+                    case "magenta": return SKColors.Magenta;
+                    case "gray": case "grey": return SKColors.Gray;
+                    case "orange": return SKColors.Orange;
+                    case "purple": return SKColors.Purple;
+                    case "pink": return SKColors.Pink;
+                    case "brown": return SKColors.Brown;
                 }
 
                 // Fallback: try parsing directly
