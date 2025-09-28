@@ -1,23 +1,35 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
+    <TargetFrameworks>net8.0;net48</TargetFrameworks>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageId>PwrSvg</PackageId>
     <PackageVersion>1.0.0</PackageVersion>
-    <Authors>calvo-software</Authors>
+    <Authors>Oscar Calvo</Authors>
     <Description>PowerShell module for rendering SVG files to raw image buffers using SkiaSharp, optimized for terminal and pipeline integration.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <RepositoryUrl>https://github.com/calvo-software/PwrSvg</RepositoryUrl>
+    <!-- Ensure native libraries are copied to output -->
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+  </PropertyGroup>
+
+  <!-- .NET 8.0 specific settings -->
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net8.0'">
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  
+  <!-- .NET Framework 4.8 specific settings -->
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net48'">
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>disable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="SkiaSharp" Version="2.88.8" />
-    <PackageReference Include="SkiaSharp.NativeAssets.Linux" Version="2.88.8" />
-    <PackageReference Include="Svg.Skia" Version="1.0.0.18" />
-    <PackageReference Include="PowerShellStandard.Library" Version="5.1.1" />
+    <PackageReference Include="SkiaSharp" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux" />
+    <PackageReference Include="Svg.Skia" />
+    <PackageReference Include="PowerShellStandard.Library" />
   </ItemGroup>
 
 </Project>

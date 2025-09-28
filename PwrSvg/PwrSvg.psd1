@@ -2,7 +2,7 @@
     # Module manifest for PwrSvg
     ModuleVersion = '1.0.0'
     GUID = 'c23a160d-a648-41bd-963f-d42c67483018'
-    Author = 'calvo-software'
+    Author = 'Oscar Calvo'
     CompanyName = 'calvo-software'
     Copyright = '(c) 2025 calvo-software. All rights reserved.'
     Description = 'PowerShell module for rendering SVG files to raw image buffers using SkiaSharp, optimized for terminal and pipeline integration.'

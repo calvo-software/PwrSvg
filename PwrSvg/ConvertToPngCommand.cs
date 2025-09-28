@@ -23,7 +23,7 @@ namespace PwrSvg
             ValueFromPipelineByPropertyName = true,
             HelpMessage = "Path to the SVG file to convert")]
         [ValidateNotNullOrEmpty]
-        public string? Path { get; set; }
+        public string Path { get; set; }
 
         /// <summary>
         /// Output file path for PNG. If not specified, returns byte array
@@ -32,7 +32,7 @@ namespace PwrSvg
             Position = 1,
             Mandatory = false,
             HelpMessage = "Output file path for PNG. If not specified, returns byte array")]
-        public string? OutFile { get; set; }
+        public string OutFile { get; set; }
 
         /// <summary>
         /// Width of the output image. If not specified, uses SVG's natural width
@@ -142,52 +142,60 @@ namespace PwrSvg
                 var backgroundColor = ParseBackgroundColor(BackgroundColor);
 
                 // Create bitmap and render
-                using var surface = SKSurface.Create(new SKImageInfo(outputWidth, outputHeight, SKColorType.Rgba8888, SKAlphaType.Premul));
-                var canvas = surface.Canvas;
-                
-                // Clear with background color
-                canvas.Clear(backgroundColor);
-
-                // Scale to fit if dimensions were specified
-                if (Width > 0 || Height > 0)
+                using (var surface = SKSurface.Create(new SKImageInfo(outputWidth, outputHeight, SKColorType.Rgba8888, SKAlphaType.Premul)))
                 {
-                    var scaleX = outputWidth / bounds.Width;
-                    var scaleY = outputHeight / bounds.Height;
-                    var scale = Math.Min(scaleX, scaleY);
+                    var canvas = surface.Canvas;
                     
-                    canvas.Scale(scale, scale);
-                    
-                    // Center the image
-                    var offsetX = (outputWidth - bounds.Width * scale) / 2 / scale;
-                    var offsetY = (outputHeight - bounds.Height * scale) / 2 / scale;
-                    canvas.Translate(offsetX, offsetY);
-                }
+                    // Clear with background color
+                    canvas.Clear(backgroundColor);
 
-                // Render SVG
-                canvas.DrawPicture(svgDocument);
-                canvas.Flush();
+                    // Scale to fit if dimensions were specified
+                    if (Width > 0 || Height > 0)
+                    {
+                        var scaleX = outputWidth / bounds.Width;
+                        var scaleY = outputHeight / bounds.Height;
+                        var scale = Math.Min(scaleX, scaleY);
+                        
+                        canvas.Scale(scale, scale);
+                        
+                        // Center the image
+                        var offsetX = (outputWidth - bounds.Width * scale) / 2 / scale;
+                        var offsetY = (outputHeight - bounds.Height * scale) / 2 / scale;
+                        canvas.Translate(offsetX, offsetY);
+                    }
 
-                // Create image and encode to PNG
-                using var image = surface.Snapshot();
-                using var data = image.Encode(SKEncodedImageFormat.Png, Quality);
-                var pngBytes = data.ToArray();
+                    // Render SVG
+                    canvas.DrawPicture(svgDocument);
+                    canvas.Flush();
 
-                WriteVerbose($"Generated PNG: {pngBytes.Length} bytes");
+                    // Create image and encode to PNG
+                    using (var image = surface.Snapshot())
+                    using (var data = image.Encode(SKEncodedImageFormat.Png, Quality))
+                    {
+                        var pngBytes = data.ToArray();
 
-                // Output result
-                if (!string.IsNullOrEmpty(OutFile))
-                {
-                    // Write to file
-                    var outPath = GetUnresolvedProviderPathFromPSPath(OutFile);
-                    Directory.CreateDirectory(System.IO.Path.GetDirectoryName(outPath)!);
-                    File.WriteAllBytes(outPath, pngBytes);
-                    WriteVerbose($"PNG written to: {outPath}");
-                    WriteObject(new FileInfo(outPath));
-                }
-                else
-                {
-                    // Return byte array for pipeline
-                    WriteObject(pngBytes);
+                        WriteVerbose($"Generated PNG: {pngBytes.Length} bytes");
+
+                        // Output result
+                        if (!string.IsNullOrEmpty(OutFile))
+                        {
+                            // Write to file
+                            var outPath = GetUnresolvedProviderPathFromPSPath(OutFile);
+                            var directoryPath = System.IO.Path.GetDirectoryName(outPath);
+                            if (!string.IsNullOrEmpty(directoryPath))
+                            {
+                                Directory.CreateDirectory(directoryPath);
+                            }
+                            File.WriteAllBytes(outPath, pngBytes);
+                            WriteVerbose($"PNG written to: {outPath}");
+                            WriteObject(new FileInfo(outPath));
+                        }
+                        else
+                        {
+                            // Return byte array for pipeline
+                            WriteObject(pngBytes);
+                        }
+                    }
                 }
             }
             catch (Exception ex)
