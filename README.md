@@ -64,8 +64,8 @@ Get-ChildItem "*.svg" | ForEach-Object {
 ## Architecture
 
 This module uses:
-- **SkiaSharp**: High-performance 2D graphics engine
-- **Svg.Skia**: SVG parsing and rendering
+- **SixLabors.ImageSharp**: High-performance, cross-platform 2D graphics engine
+- **Enhanced SVG Parsing**: XML-based SVG content analysis and rendering
 - **PowerShell Cmdlets**: Native PowerShell integration
 
-Designed for headless server environments and terminal workflows.
+Designed for headless server environments and terminal workflows with excellent Linux compatibility.
