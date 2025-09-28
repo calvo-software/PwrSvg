@@ -1,12 +1,30 @@
 # PwrSvg
 PowerShell module for rendering SVG files to raw image buffers using SkiaSharp, optimized for terminal and pipeline integration.
 
-## Features
+## Demo
 
-- **ConvertTo-Png** — Render SVG to PNG in-memory or to disk
-- Pipeline-friendly design for composability
-- High-performance SkiaSharp rendering engine
-- Terminal and headless server optimized
+See PwrSvg in action with terminal graphics rendering:
+
+```powershell
+# Direct SVG string to terminal
+"<svg width='100' height='100'><circle cx='50' cy='50' r='40' fill='#ff6b6b' stroke='#333' stroke-width='3'/></svg>" | ConvertTo-Png | ConvertTo-Sixel -stream
+
+# Or use existing SVG files
+ConvertTo-Png -Path "test.svg" | ConvertTo-Sixel -stream
+```
+
+![Terminal Demo](https://github.com/calvo-software/PwrSvg/assets/terminal-demo.gif)
+
+*The animation above shows Windows Terminal Preview on WSL Ubuntu displaying a rendered circle directly in the terminal using PwrSvg's pipeline integration with Sixel graphics.*
+
+### Why PwrSvg?
+
+- **ConvertTo-Png Cmdlet**: Render SVG to PNG in-memory or to disk
+- **Pipeline-First Design**: Seamlessly integrates with PowerShell pipelines and terminal graphics protocols
+- **Zero File I/O**: Process SVG directly from strings or files to memory streams  
+- **Terminal Graphics**: Perfect companion for `ConvertTo-Sixel` and other terminal image tools
+- **High-Performance**: SkiaSharp rendering engine with automatic SVG dimension detection
+- **Cross-Platform**: Works on Windows, Linux, and macOS with PowerShell Core
 
 ## Installation
 
