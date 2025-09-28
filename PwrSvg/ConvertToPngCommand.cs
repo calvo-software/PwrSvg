@@ -9,7 +9,7 @@ namespace PwrSvg
     /// <summary>
     /// ConvertTo-Png cmdlet for converting SVG files to PNG format
     /// </summary>
-    [Cmdlet(VerbsData.ConvertTo, "Png", DefaultParameterSetName = "Path")]
+    [Cmdlet(VerbsData.ConvertTo, "Png", DefaultParameterSetName = "FromPath")]
     [OutputType(typeof(MemoryStream), typeof(FileInfo))]
     public class ConvertToPngCommand : PSCmdlet
     {
@@ -17,25 +17,20 @@ namespace PwrSvg
         /// Path to the SVG file to convert
         /// </summary>
         [Parameter(
-            ParameterSetName = "Path",
-            Position = 0,
+            ParameterSetName = "FromPath",
             Mandatory = true,
-            ValueFromPipelineByPropertyName = true,
-            HelpMessage = "Path to the SVG file to convert")]
-        [ValidateNotNullOrEmpty]
-        public string Path { get; set; }
+            ValueFromPipeline = true,
+            ValueFromPipelineByPropertyName = true)]
+        public FileInfo Path { get; set; }
 
         /// <summary>
         /// SVG content string to convert
         /// </summary>
         [Parameter(
-            ParameterSetName = "SvgContent",
-            Position = 0,
+            ParameterSetName = "FromContent",
             Mandatory = true,
             ValueFromPipeline = true,
-            HelpMessage = "SVG content string to convert")]
-        [Alias("InputObject")]
-        [ValidateNotNullOrEmpty]
+            ValueFromPipelineByPropertyName = true)]
         public string SvgContent { get; set; }
 
         /// <summary>
@@ -111,47 +106,35 @@ namespace PwrSvg
 
                 try
                 {
-                    if (ParameterSetName == "Path")
+                    if (ParameterSetName == "FromPath")
                     {
                         // Handle file path input
-                        if (string.IsNullOrEmpty(Path))
+                        if (Path == null)
                         {
                             WriteError(new ErrorRecord(
-                                new ArgumentException("Path cannot be null or empty"),
+                                new ArgumentException("Path cannot be null"),
                                 "InvalidPath",
                                 ErrorCategory.InvalidArgument,
                                 Path));
                             return;
                         }
 
-                        var resolvedPath = GetResolvedProviderPathFromPSPath(Path, out var provider);
-                        if (resolvedPath.Count == 0)
+                        if (!Path.Exists)
                         {
                             WriteError(new ErrorRecord(
-                                new FileNotFoundException($"Cannot find path '{Path}'"),
-                                "PathNotFound",
-                                ErrorCategory.ObjectNotFound,
-                                Path));
-                            return;
-                        }
-
-                        var svgFilePath = resolvedPath[0];
-                        if (!File.Exists(svgFilePath))
-                        {
-                            WriteError(new ErrorRecord(
-                                new FileNotFoundException($"SVG file not found: {svgFilePath}"),
+                                new FileNotFoundException($"SVG file not found: {Path.FullName}"),
                                 "SvgFileNotFound",
                                 ErrorCategory.ObjectNotFound,
-                                svgFilePath));
+                                Path.FullName));
                             return;
                         }
 
-                        WriteVerbose($"Processing SVG file: {svgFilePath}");
-                        WriteVerbose($"Loading SVG document: {svgFilePath}");
-                        svgDocument = svg.Load(svgFilePath);
+                        WriteVerbose($"Processing SVG file: {Path.FullName}");
+                        WriteVerbose($"Loading SVG document: {Path.FullName}");
+                        svgDocument = svg.Load(Path.FullName);
                         WriteVerbose("SVG document loaded successfully.");
                     }
-                    else // ParameterSetName == "SvgContent"
+                    else // ParameterSetName == "FromContent"
                     {
                         // Handle SVG content string input
                         if (string.IsNullOrEmpty(SvgContent))
@@ -183,18 +166,18 @@ namespace PwrSvg
                             $"Error details: {ex.ToString()}"),
                         "SvgLoadException",
                         ErrorCategory.InvalidData,
-                        ParameterSetName == "Path" ? Path : SvgContent));
+                        ParameterSetName == "FromPath" ? Path.FullName : SvgContent));
                     return;
                 }
                 
                 if (svgDocument == null)
                 {
-                    var inputSource = ParameterSetName == "Path" ? $"SVG file: {Path}" : "SVG content string";
+                    var inputSource = ParameterSetName == "FromPath" ? $"SVG file: {Path.FullName}" : "SVG content string";
                     WriteError(new ErrorRecord(
                         new InvalidOperationException($"Failed to load {inputSource} - SVG document is null"),
                         "SvgLoadFailed",
                         ErrorCategory.InvalidData,
-                        ParameterSetName == "Path" ? Path : SvgContent));
+                        ParameterSetName == "FromPath" ? Path.FullName : SvgContent));
                     return;
                 }
 
@@ -313,7 +296,7 @@ namespace PwrSvg
                     ex,
                     "ConvertToPngError",
                     ErrorCategory.NotSpecified,
-                    ParameterSetName == "Path" ? Path : SvgContent));
+                    ParameterSetName == "FromPath" ? Path?.FullName : SvgContent));
             }
         }
 

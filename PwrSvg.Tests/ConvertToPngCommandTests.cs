@@ -143,8 +143,8 @@ public class ConvertToPngCommandTests
         var pathParameterSet = pathParameterAttributes[0].ParameterSetName;
         var svgContentParameterSet = svgContentParameterAttributes[0].ParameterSetName;
 
-        Assert.Equal("Path", pathParameterSet);
-        Assert.Equal("SvgContent", svgContentParameterSet);
+        Assert.Equal("FromPath", pathParameterSet);
+        Assert.Equal("FromContent", svgContentParameterSet);
         Assert.NotEqual(pathParameterSet, svgContentParameterSet); // Should be different parameter sets
     }
 
@@ -177,8 +177,20 @@ public class ConvertToPngCommandTests
         // Assert
         Assert.NotNull(parameterAttributes);
         Assert.NotEmpty(parameterAttributes);
-        Assert.Equal("Path", parameterAttributes[0].ParameterSetName);
+        Assert.Equal("FromPath", parameterAttributes[0].ParameterSetName);
         Assert.True(parameterAttributes[0].ValueFromPipelineByPropertyName);
-        Assert.False(parameterAttributes[0].ValueFromPipeline); // Path should NOT accept direct pipeline input
+        Assert.True(parameterAttributes[0].ValueFromPipeline); // Path should now accept direct pipeline input
+    }
+
+    [Fact]
+    public void ConvertToPngCommand_PathProperty_ShouldBeFileInfoType()
+    {
+        // Arrange
+        var cmdletType = typeof(ConvertToPngCommand);
+        var pathProperty = cmdletType.GetProperty("Path");
+
+        // Act & Assert
+        Assert.NotNull(pathProperty);
+        Assert.Equal(typeof(FileInfo), pathProperty.PropertyType);
     }
 }
