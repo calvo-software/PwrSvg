@@ -90,7 +90,6 @@ If you see errors like:
 
 - PowerShell 5.1 or later
 - .NET 8.0 runtime (or .NET Framework 4.8 for Windows PowerShell)
-- Linux: fontconfig system package
 
 ## Architecture
 
