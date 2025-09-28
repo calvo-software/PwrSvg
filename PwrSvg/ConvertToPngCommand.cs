@@ -71,9 +71,6 @@ namespace PwrSvg
 
         protected override void ProcessRecord()
         {
-            // Initialize native library paths when first cmdlet runs
-            NativeLibraryLoader.Initialize();
-            
             try
             {
                 // Validate input file
