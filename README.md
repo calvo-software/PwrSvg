@@ -29,7 +29,7 @@ ConvertTo-Png -Path "test.svg" |% { ConvertTo-Sixel -stream $_ }
 ## Installation
 
 ```powershell
-Install-Module -Name PwrSvg
+Install-Module -Name PwrSvg -Force
 ```
 
 ## Usage
