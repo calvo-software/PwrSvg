@@ -108,13 +108,51 @@ namespace PwrSvg
 
                 WriteVerbose($"Processing SVG file: {svgFilePath}");
 
-                // Load SVG using Svg.Skia
-                var svg = new SKSvg();
-                var svgDocument = svg.Load(svgFilePath);
+                // Load SVG using Svg.Skia with enhanced error handling
+                SKSvg svg;
+                SKPicture svgDocument;
+                
+                try
+                {
+                    WriteVerbose("Initializing SkiaSharp SVG engine...");
+                    svg = new SKSvg();
+                    WriteVerbose("SkiaSharp SVG engine initialized successfully.");
+                }
+                catch (Exception ex)
+                {
+                    WriteError(new ErrorRecord(
+                        new InvalidOperationException(
+                            $"Failed to initialize SkiaSharp SVG engine. This usually indicates missing native libraries. " +
+                            $"Please ensure you are using the published module (dotnet publish) which includes all native dependencies. " +
+                            $"Error details: {ex.ToString()}"),
+                        "SkiaSharpInitializationFailed",
+                        ErrorCategory.InvalidOperation,
+                        null));
+                    return;
+                }
+
+                try
+                {
+                    WriteVerbose($"Loading SVG document: {svgFilePath}");
+                    svgDocument = svg.Load(svgFilePath);
+                    WriteVerbose("SVG document loaded successfully.");
+                }
+                catch (Exception ex)
+                {
+                    WriteError(new ErrorRecord(
+                        new InvalidOperationException(
+                            $"Failed to load SVG file: {svgFilePath}. " +
+                            $"Error details: {ex.ToString()}"),
+                        "SvgLoadException",
+                        ErrorCategory.InvalidData,
+                        svgFilePath));
+                    return;
+                }
+                
                 if (svgDocument == null)
                 {
                     WriteError(new ErrorRecord(
-                        new InvalidOperationException($"Failed to load SVG file: {svgFilePath}"),
+                        new InvalidOperationException($"Failed to load SVG file: {svgFilePath} - SVG document is null"),
                         "SvgLoadFailed",
                         ErrorCategory.InvalidData,
                         svgFilePath));
@@ -141,8 +179,39 @@ namespace PwrSvg
                 // Parse background color
                 var backgroundColor = ParseBackgroundColor(BackgroundColor);
 
-                // Create bitmap and render
-                using (var surface = SKSurface.Create(new SKImageInfo(outputWidth, outputHeight, SKColorType.Rgba8888, SKAlphaType.Premul)))
+                // Create bitmap and render with enhanced error handling
+                SKSurface surface;
+                try
+                {
+                    WriteVerbose($"Creating SkiaSharp surface: {outputWidth}x{outputHeight}");
+                    surface = SKSurface.Create(new SKImageInfo(outputWidth, outputHeight, SKColorType.Rgba8888, SKAlphaType.Premul));
+                    if (surface == null)
+                    {
+                        WriteError(new ErrorRecord(
+                            new InvalidOperationException(
+                                "Failed to create SkiaSharp surface. This may indicate missing native libraries or insufficient memory. " +
+                                "Please ensure you are using the published module (dotnet publish) which includes all native dependencies."),
+                            "SurfaceCreationFailed",
+                            ErrorCategory.ResourceUnavailable,
+                            null));
+                        return;
+                    }
+                    WriteVerbose("SkiaSharp surface created successfully.");
+                }
+                catch (Exception ex)
+                {
+                    WriteError(new ErrorRecord(
+                        new InvalidOperationException(
+                            $"Failed to create SkiaSharp surface. This usually indicates missing native libraries. " +
+                            $"Please ensure you are using the published module (dotnet publish) which includes all native dependencies. " +
+                            $"Error details: {ex.ToString()}"),
+                        "SurfaceCreationException",
+                        ErrorCategory.InvalidOperation,
+                        null));
+                    return;
+                }
+
+                using (surface)
                 {
                     var canvas = surface.Canvas;
                     
