@@ -43,12 +43,14 @@ jobs:
     - name: Run tests
       run: dotnet test ${{ env.SOLUTION_FILE }} --no-build -c Release --verbosity normal
       
-    - name: Test PowerShell module import (.NET 8.0)
+    - name: Test PowerShell module import (.NET 8.0 - Cross-Platform)
       shell: pwsh
       run: |
         dotnet publish PwrSvg/PwrSvg.csproj -c Release -f net8.0 -o ./publish-net8
         Import-Module ./publish-net8/PwrSvg.dll -Force
         Get-Command -Module PwrSvg
+        
+        Write-Host "🧪 Testing .NET 8.0 on ${{ matrix.os }} with PowerShell Core"
         
         # Test ConvertTo-Png functionality with test SVG
         $result = ConvertTo-Png -Path ./test.svg -Verbose
@@ -58,32 +60,37 @@ jobs:
         if ($result.Length -eq 0) {
           throw "ConvertTo-Png returned empty result"
         }
-        Write-Host "✅ ConvertTo-Png successfully converted test.svg to PNG ($($result.Length) bytes)"
+        Write-Host "✅ .NET 8.0 (${{ matrix.os }}): ConvertTo-Png successfully converted test.svg to PNG ($($result.Length) bytes)"
         
         # Test ConvertTo-Png with file output
-        ConvertTo-Png -Path ./test.svg -OutFile ./test-output.png -Verbose
-        if (-not (Test-Path ./test-output.png)) {
+        ConvertTo-Png -Path ./test.svg -OutFile ./test-output-net8-${{ matrix.os }}.png -Verbose
+        if (-not (Test-Path ./test-output-net8-${{ matrix.os }}.png)) {
           throw "ConvertTo-Png failed to create output file"
         }
-        $fileSize = (Get-Item ./test-output.png).Length
+        $fileSize = (Get-Item ./test-output-net8-${{ matrix.os }}.png).Length
         if ($fileSize -eq 0) {
           throw "ConvertTo-Png created empty output file"
         }
-        Write-Host "✅ ConvertTo-Png successfully created output file ($fileSize bytes)"
+        Write-Host "✅ .NET 8.0 (${{ matrix.os }}): ConvertTo-Png successfully created output file ($fileSize bytes)"
         
-    - name: Test PowerShell module import (.NET Framework 4.8, Windows only)
+    - name: Test PowerShell module import (.NET Framework 4.8 - Windows Only)
       if: matrix.os == 'windows-latest'
       run: |
         dotnet publish PwrSvg/PwrSvg.csproj -c Release -f net48 -o ./publish-net48
         
-        # Test with Windows PowerShell (powershell.exe)
-        powershell -Command "Import-Module ./publish-net48/PwrSvg.dll -Force; Get-Command -Module PwrSvg; `$result = ConvertTo-Png -Path ./test.svg -Verbose; if (`$null -eq `$result) { throw 'ConvertTo-Png returned null result' }; if (`$result.Length -eq 0) { throw 'ConvertTo-Png returned empty result' }; Write-Host '✅ Windows PowerShell: ConvertTo-Png successfully converted test.svg to PNG (' `$result.Length ' bytes)'"
+        Write-Host "🧪 Testing .NET Framework 4.8 on Windows with multiple PowerShell versions"
         
-        # Test file output with Windows PowerShell
-        powershell -Command "Import-Module ./publish-net48/PwrSvg.dll -Force; ConvertTo-Png -Path ./test.svg -OutFile ./test-output-net48.png -Verbose; if (-not (Test-Path ./test-output-net48.png)) { throw 'ConvertTo-Png failed to create output file' }; `$fileSize = (Get-Item ./test-output-net48.png).Length; if (`$fileSize -eq 0) { throw 'ConvertTo-Png created empty output file' }; Write-Host '✅ Windows PowerShell: ConvertTo-Png successfully created output file (' `$fileSize ' bytes)'"
+        # Test with Windows PowerShell (powershell.exe) - Memory Stream Output
+        powershell -Command "Import-Module ./publish-net48/PwrSvg.dll -Force; Get-Command -Module PwrSvg; `$result = ConvertTo-Png -Path ./test.svg -Verbose; if (`$null -eq `$result) { throw 'ConvertTo-Png returned null result' }; if (`$result.Length -eq 0) { throw 'ConvertTo-Png returned empty result' }; Write-Host '✅ .NET Framework 4.8 (Windows PowerShell): ConvertTo-Png successfully converted test.svg to PNG (' `$result.Length ' bytes)'"
         
-        # Test with PowerShell Core (pwsh.exe)  
-        pwsh -Command "Import-Module ./publish-net48/PwrSvg.dll -Force; Get-Command -Module PwrSvg; `$result = ConvertTo-Png -Path ./test.svg -Verbose; if (`$null -eq `$result) { throw 'ConvertTo-Png returned null result' }; if (`$result.Length -eq 0) { throw 'ConvertTo-Png returned empty result' }; Write-Host '✅ PowerShell Core (.NET Framework): ConvertTo-Png successfully converted test.svg to PNG (' `$result.Length ' bytes)'"
+        # Test with Windows PowerShell (powershell.exe) - File Output
+        powershell -Command "Import-Module ./publish-net48/PwrSvg.dll -Force; ConvertTo-Png -Path ./test.svg -OutFile ./test-output-net48-winps.png -Verbose; if (-not (Test-Path ./test-output-net48-winps.png)) { throw 'ConvertTo-Png failed to create output file' }; `$fileSize = (Get-Item ./test-output-net48-winps.png).Length; if (`$fileSize -eq 0) { throw 'ConvertTo-Png created empty output file' }; Write-Host '✅ .NET Framework 4.8 (Windows PowerShell): ConvertTo-Png successfully created output file (' `$fileSize ' bytes)'"
+        
+        # Test with PowerShell Core (pwsh.exe) - Memory Stream Output  
+        pwsh -Command "Import-Module ./publish-net48/PwrSvg.dll -Force; Get-Command -Module PwrSvg; `$result = ConvertTo-Png -Path ./test.svg -Verbose; if (`$null -eq `$result) { throw 'ConvertTo-Png returned null result' }; if (`$result.Length -eq 0) { throw 'ConvertTo-Png returned empty result' }; Write-Host '✅ .NET Framework 4.8 (PowerShell Core): ConvertTo-Png successfully converted test.svg to PNG (' `$result.Length ' bytes)'"
+        
+        # Test with PowerShell Core (pwsh.exe) - File Output
+        pwsh -Command "Import-Module ./publish-net48/PwrSvg.dll -Force; ConvertTo-Png -Path ./test.svg -OutFile ./test-output-net48-pwsh.png -Verbose; if (-not (Test-Path ./test-output-net48-pwsh.png)) { throw 'ConvertTo-Png failed to create output file' }; `$fileSize = (Get-Item ./test-output-net48-pwsh.png).Length; if (`$fileSize -eq 0) { throw 'ConvertTo-Png created empty output file' }; Write-Host '✅ .NET Framework 4.8 (PowerShell Core): ConvertTo-Png successfully created output file (' `$fileSize ' bytes)'"
 
   package:
     name: Create Packages
