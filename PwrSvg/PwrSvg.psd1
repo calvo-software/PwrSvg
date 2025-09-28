@@ -13,17 +13,14 @@
     # Required modules
     RequiredModules = @('Sixel')
 
-    # Root module
-    RootModule = 'PwrSvg.psm1'
+    # Scripts to process on module import
+    ScriptsToProcess = @('Out-ConsoleSvg.ps1')
+
+    # For published builds, DLL is in the same directory as the manifest
+    RootModule = 'PwrSvg.dll'
     
     # Also load as required assembly for dependency resolution  
-    RequiredAssemblies = @(
-        if ($PSEdition -eq 'Core') {
-            Join-Path $PSScriptRoot 'net8\PwrSvg.dll'
-        } else {
-            Join-Path $PSScriptRoot 'net48\PwrSvg.dll'
-        }
-    )
+    RequiredAssemblies = @('PwrSvg.dll')
 
     # Cmdlets to export from this module
     CmdletsToExport = @('*')

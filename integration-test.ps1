@@ -32,18 +32,22 @@ try {
     Pop-Location
 }
 
-# Test 2: Import the module directly without Sixel dependency (for testing)
+# Test 2: Import the module using the unified .psd1 approach
 Write-Host "`n=== Testing Module Import ===" -ForegroundColor Green
 try {
-    # Import the C# module first
-    $dllPath = Join-Path $PSScriptRoot "PwrSvg/bin/Debug/net8.0/PwrSvg.dll"
-    Import-Module $dllPath -Force
+    # Simple unified import - just load the single .psd1 file
+    $manifestPath = Join-Path $PSScriptRoot "PwrSvg/bin/Debug/net8.0/PwrSvg.psd1"
     
-    # Load the PowerShell function
-    $scriptPath = Join-Path $PSScriptRoot "PwrSvg/bin/Debug/net8.0/Out-ConsoleSvg.ps1"
-    . $scriptPath
+    # Create a temporary manifest without the Sixel dependency for testing
+    $manifestContent = Get-Content $manifestPath -Raw
+    $testManifest = $manifestContent -replace "RequiredModules = @\('Sixel'\)", "# RequiredModules = @('Sixel')"
+    $testManifestPath = Join-Path $PSScriptRoot "PwrSvg/bin/Debug/net8.0/PwrSvg-test.psd1"
+    $testManifest | Out-File -FilePath $testManifestPath -Encoding utf8
     
-    Write-Host "✓ Module imported successfully" -ForegroundColor Green
+    # Import the test manifest
+    Import-Module $testManifestPath -Force
+    
+    Write-Host "✓ Module imported successfully with single .psd1 file" -ForegroundColor Green
 } catch {
     Write-Host "✗ Module import failed: $_" -ForegroundColor Red
     exit 1

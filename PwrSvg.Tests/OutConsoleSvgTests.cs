@@ -38,7 +38,7 @@ namespace PwrSvg.Tests
         }
         
         [Fact]
-        public void OutConsoleSvg_ManifestShouldHaveModuleRoot()
+        public void OutConsoleSvg_ManifestShouldHaveScriptsToProcess()
         {
             // Arrange
             var manifestPath = System.IO.Path.Combine(
@@ -49,7 +49,7 @@ namespace PwrSvg.Tests
             var manifestContent = System.IO.File.ReadAllText(manifestPath);
             
             // Assert
-            Assert.Contains("RootModule = 'PwrSvg.psm1'", manifestContent);
+            Assert.Contains("ScriptsToProcess = @('Out-ConsoleSvg.ps1')", manifestContent);
         }
         
         [Fact]
@@ -62,18 +62,6 @@ namespace PwrSvg.Tests
             
             // Act & Assert
             Assert.True(System.IO.File.Exists(scriptPath), $"Out-ConsoleSvg.ps1 should exist at {scriptPath}");
-        }
-        
-        [Fact]
-        public void OutConsoleSvg_ModuleFileShouldExist()
-        {
-            // Arrange
-            var modulePath = System.IO.Path.Combine(
-                System.IO.Path.GetDirectoryName(typeof(ConvertToPngCommand).Assembly.Location),
-                "PwrSvg.psm1");
-            
-            // Act & Assert
-            Assert.True(System.IO.File.Exists(modulePath), $"PwrSvg.psm1 should exist at {modulePath}");
         }
         
         [Fact]
