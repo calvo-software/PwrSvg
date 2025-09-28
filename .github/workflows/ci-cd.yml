@@ -78,45 +78,36 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore ${{ env.SOLUTION_FILE }}
       
-    - name: Build and Publish .NET 8.0
+    - name: Create Unified PowerShell Gallery Package Structure
+      shell: pwsh  
       run: |
-        dotnet publish PwrSvg/PwrSvg.csproj -c Release -f net8.0 -o ./package/net8.0
-        Copy-Item PwrSvg/PwrSvg.psd1 ./package/net8.0/
-      shell: pwsh
-      
-    - name: Build and Publish .NET Framework 4.8
-      run: |
-        dotnet publish PwrSvg/PwrSvg.csproj -c Release -f net48 -o ./package/net48
-        Copy-Item PwrSvg/PwrSvg.psd1 ./package/net48/
-      shell: pwsh
-      
-    - name: Create PowerShell Gallery Package (.NET 8.0)
-      shell: pwsh
-      run: |
-        $manifestPath = "./package/net8.0/PwrSvg.psd1"
         $version = '${{ github.event.release.tag_name }}' -replace '^v', ''
         
-        # Update manifest version
-        (Get-Content $manifestPath) -replace "ModuleVersion = '[^']*'", "ModuleVersion = '$version'" | Set-Content $manifestPath
-        
-        # Create module package structure
+        # Create unified module package structure with subdirectories for each .NET version
+        # This allows a single .psd1 manifest to dynamically load the correct assembly
         $moduleDir = "./PowerShellGallery/PwrSvg"
         New-Item -ItemType Directory -Path $moduleDir -Force
-        Copy-Item "./package/net8.0/*" $moduleDir -Recurse -Force
+        New-Item -ItemType Directory -Path "$moduleDir/net8" -Force  
+        New-Item -ItemType Directory -Path "$moduleDir/net48" -Force
         
-    - name: Upload .NET 8.0 Package
-      uses: actions/upload-artifact@v4
-      with:
-        name: PwrSvg-net8.0
-        path: ./package/net8.0/
+        # Copy the unified manifest that uses $PSEdition to select the correct assembly
+        Copy-Item "PwrSvg/PwrSvg.psd1" $moduleDir
         
-    - name: Upload .NET Framework 4.8 Package
-      uses: actions/upload-artifact@v4
-      with:
-        name: PwrSvg-net48
-        path: ./package/net48/
+        # Update manifest version from release tag
+        $manifestPath = "$moduleDir/PwrSvg.psd1"
+        (Get-Content $manifestPath) -replace "ModuleVersion = '[^']*'", "ModuleVersion = '$version'" | Set-Content $manifestPath
         
-    - name: Upload PowerShell Gallery Package
+    - name: Build and Publish .NET 8.0 Directly to Package
+      run: |
+        dotnet publish PwrSvg/PwrSvg.csproj -c Release -f net8.0 -o ./PowerShellGallery/PwrSvg/net8
+      shell: pwsh
+      
+    - name: Build and Publish .NET Framework 4.8 Directly to Package
+      run: |
+        dotnet publish PwrSvg/PwrSvg.csproj -c Release -f net48 -o ./PowerShellGallery/PwrSvg/net48
+      shell: pwsh
+        
+    - name: Upload Unified PowerShell Gallery Package
       uses: actions/upload-artifact@v4
       with:
         name: PwrSvg-PSGallery
