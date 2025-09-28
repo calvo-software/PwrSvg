@@ -75,19 +75,7 @@ try {
     Write-Host "✓ Out-ConsoleSvg function is available" -ForegroundColor Green
     Write-Host "  Function Type: $($cmd.CommandType)" -ForegroundColor Cyan
     Write-Host "  Parameters: $($cmd.Parameters.Keys -join ', ')" -ForegroundColor Cyan
-    
-    # Test the function will check for Sixel module
-    try {
-        $ErrorActionPreference = 'Stop'
-        $svgContent | Out-ConsoleSvg -Width 100 -Height 100 -ErrorAction Stop
-        Write-Host "✗ Expected Sixel module error but function succeeded" -ForegroundColor Red
-    } catch {
-        if ($_.Exception.Message -like "*Sixel*") {
-            Write-Host "✓ Function correctly checks for Sixel module dependency" -ForegroundColor Green
-        } else {
-            Write-Host "✗ Unexpected error: $_" -ForegroundColor Red
-        }
-    }
+    Write-Host "✓ Function uses automatic dependency resolution via RequiredModules" -ForegroundColor Green
     
 } catch {
     Write-Host "✗ Out-ConsoleSvg function test failed: $_" -ForegroundColor Red

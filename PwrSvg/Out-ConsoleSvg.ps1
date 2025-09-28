@@ -33,8 +33,7 @@ function Out-ConsoleSvg {
     Reads an SVG file and displays it in the console with custom dimensions.
     
     .NOTES
-    This function requires the Sixel module to be installed for console output.
-    If the Sixel module is not available, an error will be thrown.
+    This function requires the Sixel module, which is automatically loaded as a module dependency.
     #>
     [CmdletBinding()]
     param(
@@ -75,16 +74,6 @@ function Out-ConsoleSvg {
     
     process {
         try {
-            # Check if Sixel module is available
-            if (-not (Get-Module -ListAvailable -Name Sixel)) {
-                throw "The Sixel module is required for Out-ConsoleSvg but is not installed. Please install it using: Install-Module Sixel"
-            }
-            
-            # Import Sixel module if not already imported
-            if (-not (Get-Module -Name Sixel)) {
-                Import-Module Sixel -ErrorAction Stop
-            }
-            
             # Convert SVG to PNG using ConvertTo-Png
             $convertParams = @{
                 SvgContent = $SvgContent
