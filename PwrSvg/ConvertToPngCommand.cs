@@ -262,7 +262,7 @@ namespace PwrSvg
                         else
                         {
                             // Return byte array for pipeline
-                            WriteObject(pngBytes);
+                            WriteObject(new MemoryStream(pngBytes));
                         }
                     }
                 }
