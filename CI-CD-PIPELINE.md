@@ -20,7 +20,7 @@ The CI/CD pipeline is configured with GitHub Actions and includes the following 
 - Test PowerShell module import on each platform
 
 ### 2. Create Packages (`package` job)
-- **Triggers**: Release published
+- **Triggers**: Release published or tag push (tags matching `v*`)
 - **Platform**: Windows (required for .NET Framework 4.8 builds)
 
 **Steps:**
@@ -30,7 +30,7 @@ The CI/CD pipeline is configured with GitHub Actions and includes the following 
 - Upload build artifacts
 
 ### 3. Publish to PowerShell Gallery (`publish` job)
-- **Triggers**: Release published
+- **Triggers**: Release published or tag push (tags matching `v*`)
 - **Platform**: Windows
 
 **Steps:**
@@ -48,15 +48,20 @@ Add the following secret to your GitHub repository:
 
 ### Creating a Release
 
-To trigger the packaging and publishing pipeline:
+To trigger the packaging and publishing pipeline, you have two options:
 
+**Option 1: Direct tag push (Recommended)**
+1. Create a new tag: `git tag v1.0.0`
+2. Push the tag: `git push origin v1.0.0`  
+
+**Option 2: GitHub release**
 1. Create a new tag: `git tag v1.0.0`
 2. Push the tag: `git push origin v1.0.0`  
 3. Create a release from the tag on GitHub
 
 The pipeline will:
 - Build packages for both .NET 8.0 and .NET Framework 4.8
-- Update the module version to match the release tag
+- Update the module version to match the tag
 - Publish to PowerShell Gallery
 
 ## Test Coverage

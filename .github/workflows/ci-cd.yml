@@ -3,6 +3,8 @@ name: CI/CD Pipeline
 on:
   push:
     branches: [ main, develop ]
+    tags:
+      - 'v*'
   pull_request:
     branches: [ main ]
   release:
@@ -65,7 +67,7 @@ jobs:
     name: Create Packages
     needs: test
     runs-on: windows-latest
-    if: github.event_name == 'release'
+    if: github.event_name == 'release' || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v'))
     
     steps:
     - uses: actions/checkout@v4
@@ -81,7 +83,12 @@ jobs:
     - name: Create Unified PowerShell Gallery Package Structure
       shell: pwsh  
       run: |
-        $version = '${{ github.event.release.tag_name }}' -replace '^v', ''
+        # Extract version from either release tag_name or pushed tag ref_name
+        if ('${{ github.event_name }}' -eq 'release') {
+          $version = '${{ github.event.release.tag_name }}' -replace '^v', ''
+        } else {
+          $version = '${{ github.ref_name }}' -replace '^v', ''
+        }
         
         # Create unified module package structure with subdirectories for each .NET version
         # This allows a single .psd1 manifest to dynamically load the correct assembly
@@ -117,7 +124,7 @@ jobs:
     name: Publish to PowerShell Gallery
     needs: package
     runs-on: windows-latest
-    if: github.event_name == 'release'
+    if: github.event_name == 'release' || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v'))
     
     steps:
     - name: Download PowerShell Gallery Package
