@@ -75,16 +75,14 @@ Get-ChildItem "*.svg" | ForEach-Object {
 
 ## Installation
 
-**⚠️ Important**: This module requires proper deployment of native libraries to function correctly.
-
 ### Method 1: Use Published Build (Recommended)
 
 ```powershell
-# Build and publish the module with all native dependencies
+# Build and publish the module
 cd PwrSvg
 dotnet publish -c Release -f net8.0 -o bin/Publish
 
-# Import the published module (includes all native libraries)
+# Import the published module
 Import-Module ./bin/Publish/PwrSvg.dll
 ```
 
@@ -95,14 +93,6 @@ Import-Module ./bin/Publish/PwrSvg.dll
 dotnet publish -c Release -f net48 -o bin/Publish-Net48
 Import-Module ./bin/Publish-Net48/PwrSvg.dll
 ```
-
-### Common Issues
-
-If you see errors like:
-- `The type initializer for 'SkiaSharp.SKImageInfo' threw an exception`
-- `Failed to initialize SkiaSharp SVG engine`
-
-**Solution**: Always use `dotnet publish` instead of `dotnet build`. The publish command ensures all native libraries (libSkiaSharp.dll/.so/.dylib) are properly deployed for your platform.
 
 ## Requirements
 
