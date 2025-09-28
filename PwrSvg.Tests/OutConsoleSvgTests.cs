@@ -6,13 +6,17 @@ namespace PwrSvg.Tests
 {
     public class OutConsoleSvgTests
     {
+        private string GetSourceDirectoryPath()
+        {
+            // The working directory during tests is the solution root
+            return System.IO.Directory.GetCurrentDirectory();
+        }
         [Fact]
         public void OutConsoleSvg_ManifestShouldContainFunction()
         {
-            // Arrange
-            var manifestPath = System.IO.Path.Combine(
-                System.IO.Path.GetDirectoryName(typeof(ConvertToPngCommand).Assembly.Location),
-                "PwrSvg.psd1");
+            // Arrange - look for manifest in source directory  
+            var sourceDir = System.IO.Path.GetDirectoryName(System.IO.Path.GetDirectoryName(System.IO.Path.GetDirectoryName(typeof(ConvertToPngCommand).Assembly.Location)));
+            var manifestPath = System.IO.Path.Combine(sourceDir, "PwrSvg", "PwrSvg.psd1");
             
             // Act
             var manifestContent = System.IO.File.ReadAllText(manifestPath);
@@ -26,9 +30,8 @@ namespace PwrSvg.Tests
         public void OutConsoleSvg_ManifestShouldHaveSixelModuleDependency()
         {
             // Arrange
-            var manifestPath = System.IO.Path.Combine(
-                System.IO.Path.GetDirectoryName(typeof(ConvertToPngCommand).Assembly.Location),
-                "PwrSvg.psd1");
+            var sourceDir = GetSourceDirectoryPath();
+            var manifestPath = System.IO.Path.Combine(sourceDir, "PwrSvg", "PwrSvg.psd1");
             
             // Act
             var manifestContent = System.IO.File.ReadAllText(manifestPath);
@@ -41,9 +44,8 @@ namespace PwrSvg.Tests
         public void OutConsoleSvg_ManifestShouldHaveScriptsToProcess()
         {
             // Arrange
-            var manifestPath = System.IO.Path.Combine(
-                System.IO.Path.GetDirectoryName(typeof(ConvertToPngCommand).Assembly.Location),
-                "PwrSvg.psd1");
+            var sourceDir = GetSourceDirectoryPath();
+            var manifestPath = System.IO.Path.Combine(sourceDir, "PwrSvg", "PwrSvg.psd1");
             
             // Act
             var manifestContent = System.IO.File.ReadAllText(manifestPath);
@@ -56,9 +58,8 @@ namespace PwrSvg.Tests
         public void OutConsoleSvg_ScriptFileShouldExist()
         {
             // Arrange
-            var scriptPath = System.IO.Path.Combine(
-                System.IO.Path.GetDirectoryName(typeof(ConvertToPngCommand).Assembly.Location),
-                "Out-ConsoleSvg.ps1");
+            var sourceDir = GetSourceDirectoryPath();
+            var scriptPath = System.IO.Path.Combine(sourceDir, "PwrSvg", "Out-ConsoleSvg.ps1");
             
             // Act & Assert
             Assert.True(System.IO.File.Exists(scriptPath), $"Out-ConsoleSvg.ps1 should exist at {scriptPath}");
@@ -68,9 +69,8 @@ namespace PwrSvg.Tests
         public void OutConsoleSvg_ScriptShouldContainFunction()
         {
             // Arrange
-            var scriptPath = System.IO.Path.Combine(
-                System.IO.Path.GetDirectoryName(typeof(ConvertToPngCommand).Assembly.Location),
-                "Out-ConsoleSvg.ps1");
+            var sourceDir = GetSourceDirectoryPath();
+            var scriptPath = System.IO.Path.Combine(sourceDir, "PwrSvg", "Out-ConsoleSvg.ps1");
             
             // Act
             var scriptContent = System.IO.File.ReadAllText(scriptPath);
@@ -86,9 +86,8 @@ namespace PwrSvg.Tests
         public void OutConsoleSvg_ScriptShouldHaveProperParameters()
         {
             // Arrange
-            var scriptPath = System.IO.Path.Combine(
-                System.IO.Path.GetDirectoryName(typeof(ConvertToPngCommand).Assembly.Location),
-                "Out-ConsoleSvg.ps1");
+            var sourceDir = GetSourceDirectoryPath();
+            var scriptPath = System.IO.Path.Combine(sourceDir, "PwrSvg", "Out-ConsoleSvg.ps1");
             
             // Act
             var scriptContent = System.IO.File.ReadAllText(scriptPath);
@@ -105,9 +104,8 @@ namespace PwrSvg.Tests
         public void OutConsoleSvg_ManifestShouldHaveUpdatedReleaseNotes()
         {
             // Arrange
-            var manifestPath = System.IO.Path.Combine(
-                System.IO.Path.GetDirectoryName(typeof(ConvertToPngCommand).Assembly.Location),
-                "PwrSvg.psd1");
+            var sourceDir = GetSourceDirectoryPath();
+            var manifestPath = System.IO.Path.Combine(sourceDir, "PwrSvg", "PwrSvg.psd1");
             
             // Act
             var manifestContent = System.IO.File.ReadAllText(manifestPath);

@@ -49,9 +49,6 @@ Get-ChildItem "*.svg" | ForEach-Object {
 
 ### Console Output with Sixel Graphics
 ```powershell
-# Install Sixel module (required dependency)
-Install-Module Sixel
-
 # Display SVG directly in console
 "<svg width='100' height='100'><circle cx='50' cy='50' r='40' fill='#ff6b6b'/></svg>" | Out-ConsoleSvg
 
@@ -109,7 +106,6 @@ If you see errors like:
 - PowerShell 5.1 or later
 - .NET 8.0 runtime (or .NET Framework 4.8 for Windows PowerShell)
 - Linux: fontconfig system package
-- For console output: Sixel module (`Install-Module Sixel`)
 
 ## Architecture
 

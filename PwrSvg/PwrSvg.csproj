@@ -27,13 +27,4 @@
     <PackageReference Include="PowerShellStandard.Library" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Content Include="Out-ConsoleSvg.ps1">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="PwrSvg.psd1">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
-
 </Project>
