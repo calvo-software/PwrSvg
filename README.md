@@ -13,9 +13,9 @@ See PwrSvg in action with terminal graphics rendering:
 ConvertTo-Png -Path "test.svg" |% { ConvertTo-Sixel -stream $_ }
 ```
 
-![Terminal Demo](https://github.com/calvo-software/PwrSvg/assets/terminal-demo.gif)
+![Terminal Demo](https://private-user-images.githubusercontent.com/2091582/494918632-16c01d78-2dfd-41df-b059-788026cba6e9.png?jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NTkwOTcyMDAsIm5iZiI6MTc1OTA5NjkwMCwicGF0aCI6Ii8yMDkxNTgyLzQ5NDkxODYzMi0xNmMwMWQ3OC0yZGZkLTQxZGYtYjA1OS03ODgwMjZjYmE2ZTkucG5nP1gtQW16LUFsZ29yaXRobT1BV1M0LUhNQUMtU0hBMjU2JlgtQW16LUNyZWRlbnRpYWw9QUtJQVZDT0RZTFNBNTNQUUs0WkElMkYyMDI1MDkyOCUyRnVzLWVhc3QtMSUyRnMzJTJGYXdzNF9yZXF1ZXN0JlgtQW16LURhdGU9MjAyNTA5MjhUMjIwMTQwWiZYLUFtei1FeHBpcmVzPTMwMCZYLUFtei1TaWduYXR1cmU9YzUzYjBkZjZlNjI4YzY2NjE3YzMwNDM2OWQ0MTlkNjlkYjQyMjRhMWJmNmZjZDMxYzNlM2M1NmFjNWJmMmIyMSZYLUFtei1TaWduZWRIZWFkZXJzPWhvc3QifQ.25mN9vIzSErSiTB6XrwYgktmt3FjvmzQjftaUF9m994)
 
-*The animation above shows Windows Terminal Preview on WSL Ubuntu displaying a rendered circle directly in the terminal using PwrSvg's pipeline integration with Sixel graphics.*
+*The screenshot above shows Windows Terminal Preview on WSL Ubuntu displaying a rendered circle directly in the terminal using PwrSvg's pipeline integration with Sixel graphics.*
 
 ### Why PwrSvg?
 
