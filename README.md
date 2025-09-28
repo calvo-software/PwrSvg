@@ -37,8 +37,8 @@ ConvertTo-Png -Path "input.svg" -OutFile "output.png" -BackgroundColor "White"
 
 ### Pipeline Integration
 ```powershell
-# Get PNG as byte array for further processing
-$pngBytes = ConvertTo-Png -Path "input.svg"
+# Get PNG as MemoryStream for further processing
+$pngStream = ConvertTo-Png -Path "input.svg"
 
 # Pipeline with file processing
 Get-ChildItem "*.svg" | ForEach-Object {
@@ -49,7 +49,7 @@ Get-ChildItem "*.svg" | ForEach-Object {
 ### Parameters
 
 - **Path**: Input SVG file path (mandatory)
-- **OutFile**: Output PNG file path (optional - returns byte array if not specified)
+- **OutFile**: Output PNG file path (optional - returns readonly MemoryStream if not specified)
 - **Width**: Output width in pixels (optional - uses SVG dimensions if not specified)
 - **Height**: Output height in pixels (optional - uses SVG dimensions if not specified)
 - **BackgroundColor**: Background color (optional - "Transparent", "White", "Black", or hex color like "#FFFFFF")

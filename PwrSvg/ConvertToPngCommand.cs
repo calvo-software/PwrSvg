@@ -10,7 +10,7 @@ namespace PwrSvg
     /// ConvertTo-Png cmdlet for converting SVG files to PNG format
     /// </summary>
     [Cmdlet(VerbsData.ConvertTo, "Png")]
-    [OutputType(typeof(byte[]), typeof(FileInfo))]
+    [OutputType(typeof(MemoryStream), typeof(FileInfo))]
     public class ConvertToPngCommand : PSCmdlet
     {
         /// <summary>
@@ -26,12 +26,12 @@ namespace PwrSvg
         public string Path { get; set; }
 
         /// <summary>
-        /// Output file path for PNG. If not specified, returns byte array
+        /// Output file path for PNG. If not specified, returns readonly MemoryStream
         /// </summary>
         [Parameter(
             Position = 1,
             Mandatory = false,
-            HelpMessage = "Output file path for PNG. If not specified, returns byte array")]
+            HelpMessage = "Output file path for PNG. If not specified, returns readonly MemoryStream")]
         public string OutFile { get; set; }
 
         /// <summary>
@@ -261,8 +261,9 @@ namespace PwrSvg
                         }
                         else
                         {
-                            // Return byte array for pipeline
-                            WriteObject(pngBytes);
+                            // Return readonly MemoryStream for pipeline
+                            var memoryStream = new MemoryStream(pngBytes, false);
+                            WriteObject(memoryStream);
                         }
                     }
                 }
