@@ -60,7 +60,7 @@ public class ConvertToPngCommandTests
         // Assert
         Assert.NotEmpty(outputTypeAttributes);
         var outputTypeNames = outputTypeAttributes[0].Type.Select(t => t.Type).ToArray();
-        Assert.Contains(typeof(byte[]), outputTypeNames);
+        Assert.Contains(typeof(MemoryStream), outputTypeNames);
         Assert.Contains(typeof(FileInfo), outputTypeNames);
     }
 
@@ -96,5 +96,19 @@ public class ConvertToPngCommandTests
         cmdlet.Height = 100;
         cmdlet.Height = 1080;
         Assert.Equal(1080, cmdlet.Height);
+    }
+
+    [Fact]
+    public void ConvertToPngCommand_ShouldReturnMemoryStreamInOutputType()
+    {
+        // Arrange
+        var cmdletType = typeof(ConvertToPngCommand);
+        var outputTypeAttributes = (OutputTypeAttribute[])Attribute.GetCustomAttributes(cmdletType, typeof(OutputTypeAttribute));
+
+        // Assert
+        Assert.NotEmpty(outputTypeAttributes);
+        var outputTypeNames = outputTypeAttributes[0].Type.Select(t => t.Type).ToArray();
+        Assert.Contains(typeof(MemoryStream), outputTypeNames);
+        Assert.DoesNotContain(typeof(byte[]), outputTypeNames); // Should not contain byte[] anymore
     }
 }
