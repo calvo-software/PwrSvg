@@ -9,6 +9,11 @@ namespace PwrSvg.Tests;
 
 public class ConvertToPngCommandTests
 {
+    private const string TestSvgContent = @"<?xml version=""1.0"" encoding=""UTF-8""?>
+<svg width=""100"" height=""100"" xmlns=""http://www.w3.org/2000/svg"">
+  <circle cx=""50"" cy=""50"" r=""40"" fill=""red""/>
+</svg>";
+
     [Fact]
     public void ConvertToPngCommand_ShouldHaveCorrectCmdletAttribute()
     {
@@ -129,14 +134,10 @@ public class ConvertToPngCommandTests
     {
         // Arrange - Create a simple SVG file for testing
         var testSvgPath = Path.GetTempFileName();
-        var testSvgContent = @"<?xml version=""1.0"" encoding=""UTF-8""?>
-<svg width=""100"" height=""100"" xmlns=""http://www.w3.org/2000/svg"">
-  <circle cx=""50"" cy=""50"" r=""40"" fill=""red""/>
-</svg>";
         
         try
         {
-            File.WriteAllText(testSvgPath, testSvgContent);
+            File.WriteAllText(testSvgPath, TestSvgContent);
 
             // Test that we can at least create the command and set properties
             // without errors - this verifies the basic structure is correct
@@ -158,5 +159,38 @@ public class ConvertToPngCommandTests
                 File.Delete(testSvgPath);
             }
         }
+    }
+
+    [Fact]
+    public void ConvertToPngCommand_TestSvgFile_ShouldExistInRepository()
+    {
+        // Arrange & Act - Look for the test.svg file in the repository root
+        var repoRoot = GetRepositoryRoot();
+        var testSvgPath = Path.Combine(repoRoot, "test.svg");
+        
+        // Assert
+        Assert.True(File.Exists(testSvgPath), "test.svg should exist in repository root for CI/CD testing");
+        
+        // Verify it's a valid SVG by checking it starts with SVG content
+        var content = File.ReadAllText(testSvgPath);
+        Assert.Contains("<?xml", content);
+        Assert.Contains("<svg", content);
+        Assert.Contains("</svg>", content);
+    }
+
+    /// <summary>
+    /// Gets the repository root directory by walking up from the current assembly location
+    /// </summary>
+    private static string GetRepositoryRoot()
+    {
+        var assemblyLocation = typeof(ConvertToPngCommandTests).Assembly.Location;
+        var directory = Path.GetDirectoryName(assemblyLocation);
+        
+        while (directory != null && !File.Exists(Path.Combine(directory, "test.svg")))
+        {
+            directory = Directory.GetParent(directory)?.FullName;
+        }
+        
+        return directory ?? throw new InvalidOperationException("Could not find repository root with test.svg");
     }
 }
