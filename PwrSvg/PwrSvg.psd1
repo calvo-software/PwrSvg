@@ -16,31 +16,21 @@
     # Scripts to process on module import
     ScriptsToProcess = @('Out-ConsoleSvg.ps1')
 
-    # Dynamically determine which assembly to load based on PowerShell edition and build output
-    # PowerShell Core ($PSEdition -eq 'Core') uses .NET 8 assembly from bin/Debug/net8.0/ or bin/Release/net8.0/
-    # Windows PowerShell ($PSEdition -eq 'Desktop' or null) uses .NET Framework 4.8 assembly from bin/Debug/net48/ or bin/Release/net48/
+    # Dynamically determine which assembly to load based on PowerShell edition
+    # PowerShell Core ($PSEdition -eq 'Core') uses .NET 8 assembly from net8/ subdirectory  
+    # Windows PowerShell ($PSEdition -eq 'Desktop' or null) uses .NET Framework 4.8 assembly from net48/ subdirectory
     RootModule = if ($PSEdition -eq 'Core') {
-        # Look for Release build first, then Debug build
-        $releasePath = Join-Path $PSScriptRoot 'bin\Release\net8.0\PwrSvg.dll'
-        $debugPath = Join-Path $PSScriptRoot 'bin\Debug\net8.0\PwrSvg.dll'
-        if (Test-Path $releasePath) { $releasePath } else { $debugPath }
+        Join-Path $PSScriptRoot 'net8\PwrSvg.dll'
     } else {
-        # Look for Release build first, then Debug build  
-        $releasePath = Join-Path $PSScriptRoot 'bin\Release\net48\PwrSvg.dll'
-        $debugPath = Join-Path $PSScriptRoot 'bin\Debug\net48\PwrSvg.dll'
-        if (Test-Path $releasePath) { $releasePath } else { $debugPath }
+        Join-Path $PSScriptRoot 'net48\PwrSvg.dll'
     }
     
     # Also load as required assembly for dependency resolution  
     RequiredAssemblies = @(
         if ($PSEdition -eq 'Core') {
-            $releasePath = Join-Path $PSScriptRoot 'bin\Release\net8.0\PwrSvg.dll'
-            $debugPath = Join-Path $PSScriptRoot 'bin\Debug\net8.0\PwrSvg.dll'
-            if (Test-Path $releasePath) { $releasePath } else { $debugPath }
+            Join-Path $PSScriptRoot 'net8\PwrSvg.dll'
         } else {
-            $releasePath = Join-Path $PSScriptRoot 'bin\Release\net48\PwrSvg.dll'
-            $debugPath = Join-Path $PSScriptRoot 'bin\Debug\net48\PwrSvg.dll'
-            if (Test-Path $releasePath) { $releasePath } else { $debugPath }
+            Join-Path $PSScriptRoot 'net48\PwrSvg.dll'
         }
     )
 
