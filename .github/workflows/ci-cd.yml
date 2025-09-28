@@ -1,0 +1,157 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  release:
+    types: [ published ]
+
+env:
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+  DOTNET_NOLOGO: true
+  SOLUTION_FILE: 'PwrSvg.sln'
+
+jobs:
+  test:
+    name: Build and Test
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        dotnet-version: ['8.0.x']
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ matrix.dotnet-version }}
+    
+    - name: Restore dependencies
+      run: dotnet restore ${{ env.SOLUTION_FILE }}
+      
+    - name: Build for .NET 8.0
+      run: dotnet build ${{ env.SOLUTION_FILE }} -c Release -f net8.0 --no-restore
+      
+    - name: Build for .NET Framework 4.8 (Windows only)
+      if: matrix.os == 'windows-latest'
+      run: dotnet build PwrSvg/PwrSvg.csproj -c Release -f net48 --no-restore
+      
+    - name: Run tests
+      run: dotnet test ${{ env.SOLUTION_FILE }} --no-build -c Release --verbosity normal
+      
+    - name: Test PowerShell module import (.NET 8.0)
+      shell: pwsh
+      run: |
+        dotnet publish PwrSvg/PwrSvg.csproj -c Release -f net8.0 -o ./publish-net8
+        Import-Module ./publish-net8/PwrSvg.dll -Force
+        Get-Command -Module PwrSvg
+        
+    - name: Test PowerShell module import (.NET Framework 4.8, Windows only)
+      if: matrix.os == 'windows-latest'
+      run: |
+        dotnet publish PwrSvg/PwrSvg.csproj -c Release -f net48 -o ./publish-net48
+        
+        # Test with Windows PowerShell (powershell.exe)
+        powershell -Command "Import-Module ./publish-net48/PwrSvg.dll -Force; Get-Command -Module PwrSvg"
+        
+        # Test with PowerShell Core (pwsh.exe)  
+        pwsh -Command "Import-Module ./publish-net48/PwrSvg.dll -Force; Get-Command -Module PwrSvg"
+
+  package:
+    name: Create Packages
+    needs: test
+    runs-on: windows-latest
+    if: github.event_name == 'release'
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+    
+    - name: Restore dependencies
+      run: dotnet restore ${{ env.SOLUTION_FILE }}
+      
+    - name: Build and Publish .NET 8.0
+      run: |
+        dotnet publish PwrSvg/PwrSvg.csproj -c Release -f net8.0 -o ./package/net8.0
+        Copy-Item PwrSvg/PwrSvg.psd1 ./package/net8.0/
+      shell: pwsh
+      
+    - name: Build and Publish .NET Framework 4.8
+      run: |
+        dotnet publish PwrSvg/PwrSvg.csproj -c Release -f net48 -o ./package/net48
+        Copy-Item PwrSvg/PwrSvg.psd1 ./package/net48/
+      shell: pwsh
+      
+    - name: Create PowerShell Gallery Package (.NET 8.0)
+      shell: pwsh
+      run: |
+        $manifestPath = "./package/net8.0/PwrSvg.psd1"
+        $version = '${{ github.event.release.tag_name }}' -replace '^v', ''
+        
+        # Update manifest version
+        (Get-Content $manifestPath) -replace "ModuleVersion = '[^']*'", "ModuleVersion = '$version'" | Set-Content $manifestPath
+        
+        # Create module package structure
+        $moduleDir = "./PowerShellGallery/PwrSvg"
+        New-Item -ItemType Directory -Path $moduleDir -Force
+        Copy-Item "./package/net8.0/*" $moduleDir -Recurse -Force
+        
+    - name: Upload .NET 8.0 Package
+      uses: actions/upload-artifact@v4
+      with:
+        name: PwrSvg-net8.0
+        path: ./package/net8.0/
+        
+    - name: Upload .NET Framework 4.8 Package
+      uses: actions/upload-artifact@v4
+      with:
+        name: PwrSvg-net48
+        path: ./package/net48/
+        
+    - name: Upload PowerShell Gallery Package
+      uses: actions/upload-artifact@v4
+      with:
+        name: PwrSvg-PSGallery
+        path: ./PowerShellGallery/
+
+  publish:
+    name: Publish to PowerShell Gallery
+    needs: package
+    runs-on: windows-latest
+    if: github.event_name == 'release'
+    
+    steps:
+    - name: Download PowerShell Gallery Package
+      uses: actions/download-artifact@v4
+      with:
+        name: PwrSvg-PSGallery
+        path: ./
+        
+    - name: Publish to PowerShell Gallery
+      shell: pwsh
+      run: |
+        $apiKey = "${{ secrets.POWERSHELL_GALLERY_API_KEY }}"
+        if ([string]::IsNullOrEmpty($apiKey)) {
+          Write-Error "PowerShell Gallery API key not found in secrets. Please add POWERSHELL_GALLERY_API_KEY to repository secrets."
+          exit 1
+        }
+        
+        # Install required modules
+        Install-Module -Name PowerShellGet -Force -AllowClobber -Scope CurrentUser
+        
+        # Publish module
+        try {
+          Publish-Module -Path "./PwrSvg" -NuGetApiKey $apiKey -Verbose -Force
+          Write-Host "✅ Successfully published PwrSvg module to PowerShell Gallery"
+        } catch {
+          Write-Error "❌ Failed to publish to PowerShell Gallery: $_"
+          exit 1
+        }
