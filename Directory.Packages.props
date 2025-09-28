@@ -4,5 +4,12 @@
     <PackageVersion Include="SkiaSharp.NativeAssets.Linux" Version="2.88.8" />
     <PackageVersion Include="Svg.Skia" Version="1.0.0.18" />
     <PackageVersion Include="PowerShellStandard.Library" Version="5.1.1" />
+    <!-- Test packages -->
+    <PackageVersion Include="coverlet.collector" Version="6.0.0" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
+    <PackageVersion Include="xunit" Version="2.5.3" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="2.5.3" />
+    <PackageVersion Include="Microsoft.PowerShell.Commands.Management" Version="7.4.0" />
+    <PackageVersion Include="System.Management.Automation" Version="7.4.0" />
   </ItemGroup>
 </Project>
