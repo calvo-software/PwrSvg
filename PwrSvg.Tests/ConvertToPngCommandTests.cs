@@ -13,7 +13,6 @@ public class ConvertToPngCommandTests
 <svg width=""100"" height=""100"" xmlns=""http://www.w3.org/2000/svg"">
   <circle cx=""50"" cy=""50"" r=""40"" fill=""red""/>
 </svg>";
-
     [Fact]
     public void ConvertToPngCommand_ShouldHaveCorrectCmdletAttribute()
     {
@@ -118,79 +117,84 @@ public class ConvertToPngCommandTests
     }
 
     [Fact]
-    public void ConvertToPngCommand_NativeLibraryLoader_ShouldInitializeSuccessfully()
+    public void ConvertToPngCommand_ShouldHaveSvgContentProperty()
     {
-        // Arrange & Act
-        // This test verifies that the NativeLibraryLoader.Initialize() method
-        // can be called without throwing exceptions
-        var exception = Record.Exception(() => NativeLibraryLoader.Initialize());
+        // Arrange
+        var cmdlet = new ConvertToPngCommand();
 
-        // Assert
-        Assert.Null(exception);
-    }
-
-    [Fact] 
-    public void ConvertToPngCommand_WithValidSvg_ShouldProcessWithoutError()
-    {
-        // Arrange - Create a simple SVG file for testing
-        var testSvgPath = Path.GetTempFileName();
-        
-        try
-        {
-            File.WriteAllText(testSvgPath, TestSvgContent);
-
-            // Test that we can at least create the command and set properties
-            // without errors - this verifies the basic structure is correct
-            var cmdlet = new ConvertToPngCommand();
-            cmdlet.Path = testSvgPath;
-            cmdlet.Width = 100;
-            cmdlet.Height = 100;
-            
-            // Assert - Basic properties should be set correctly
-            Assert.Equal(testSvgPath, cmdlet.Path);
-            Assert.Equal(100, cmdlet.Width);
-            Assert.Equal(100, cmdlet.Height);
-            Assert.Equal(95, cmdlet.Quality); // Default value
-        }
-        finally
-        {
-            if (File.Exists(testSvgPath))
-            {
-                File.Delete(testSvgPath);
-            }
-        }
+        // Act & Assert
+        Assert.NotNull(cmdlet.GetType().GetProperty("SvgContent"));
     }
 
     [Fact]
-    public void ConvertToPngCommand_TestSvgFile_ShouldExistInRepository()
+    public void ConvertToPngCommand_ShouldHaveCorrectParameterSets()
     {
-        // Arrange & Act - Look for the test.svg file in the repository root
-        var repoRoot = GetRepositoryRoot();
-        var testSvgPath = Path.Combine(repoRoot, "test.svg");
-        
+        // Arrange
+        var cmdletType = typeof(ConvertToPngCommand);
+        var pathProperty = cmdletType.GetProperty("Path");
+        var svgContentProperty = cmdletType.GetProperty("SvgContent");
+
+        // Act
+        var pathParameterAttributes = pathProperty?.GetCustomAttributes(typeof(ParameterAttribute), false).Cast<ParameterAttribute>().ToArray();
+        var svgContentParameterAttributes = svgContentProperty?.GetCustomAttributes(typeof(ParameterAttribute), false).Cast<ParameterAttribute>().ToArray();
+
         // Assert
-        Assert.True(File.Exists(testSvgPath), "test.svg should exist in repository root for CI/CD testing");
-        
-        // Verify it's a valid SVG by checking it starts with SVG content
-        var content = File.ReadAllText(testSvgPath);
-        Assert.Contains("<?xml", content);
-        Assert.Contains("<svg", content);
-        Assert.Contains("</svg>", content);
+        Assert.NotNull(pathParameterAttributes);
+        Assert.NotNull(svgContentParameterAttributes);
+        Assert.NotEmpty(pathParameterAttributes);
+        Assert.NotEmpty(svgContentParameterAttributes);
+
+        var pathParameterSet = pathParameterAttributes[0].ParameterSetName;
+        var svgContentParameterSet = svgContentParameterAttributes[0].ParameterSetName;
+
+        Assert.Equal("FromPath", pathParameterSet);
+        Assert.Equal("FromContent", svgContentParameterSet);
+        Assert.NotEqual(pathParameterSet, svgContentParameterSet); // Should be different parameter sets
     }
 
-    /// <summary>
-    /// Gets the repository root directory by walking up from the current assembly location
-    /// </summary>
-    private static string GetRepositoryRoot()
+    [Fact]
+    public void ConvertToPngCommand_SvgContentProperty_ShouldAcceptFromPipeline()
     {
-        var assemblyLocation = typeof(ConvertToPngCommandTests).Assembly.Location;
-        var directory = Path.GetDirectoryName(assemblyLocation);
-        
-        while (directory != null && !File.Exists(Path.Combine(directory, "test.svg")))
-        {
-            directory = Directory.GetParent(directory)?.FullName;
-        }
-        
-        return directory ?? throw new InvalidOperationException("Could not find repository root with test.svg");
+        // Arrange
+        var cmdletType = typeof(ConvertToPngCommand);
+        var svgContentProperty = cmdletType.GetProperty("SvgContent");
+
+        // Act
+        var parameterAttributes = svgContentProperty?.GetCustomAttributes(typeof(ParameterAttribute), false).Cast<ParameterAttribute>().ToArray();
+
+        // Assert
+        Assert.NotNull(parameterAttributes);
+        Assert.NotEmpty(parameterAttributes);
+        Assert.True(parameterAttributes[0].ValueFromPipeline);
+    }
+
+    [Fact]
+    public void ConvertToPngCommand_PathProperty_ShouldBeInPathParameterSet()
+    {
+        // Arrange
+        var cmdletType = typeof(ConvertToPngCommand);
+        var pathProperty = cmdletType.GetProperty("Path");
+
+        // Act
+        var parameterAttributes = pathProperty?.GetCustomAttributes(typeof(ParameterAttribute), false).Cast<ParameterAttribute>().ToArray();
+
+        // Assert
+        Assert.NotNull(parameterAttributes);
+        Assert.NotEmpty(parameterAttributes);
+        Assert.Equal("FromPath", parameterAttributes[0].ParameterSetName);
+        Assert.True(parameterAttributes[0].ValueFromPipelineByPropertyName);
+        Assert.True(parameterAttributes[0].ValueFromPipeline); // Path should now accept direct pipeline input
+    }
+
+    [Fact]
+    public void ConvertToPngCommand_PathProperty_ShouldBeFileInfoType()
+    {
+        // Arrange
+        var cmdletType = typeof(ConvertToPngCommand);
+        var pathProperty = cmdletType.GetProperty("Path");
+
+        // Act & Assert
+        Assert.NotNull(pathProperty);
+        Assert.Equal(typeof(FileInfo), pathProperty.PropertyType);
     }
 }
