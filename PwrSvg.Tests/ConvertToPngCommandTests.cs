@@ -113,19 +113,72 @@ public class ConvertToPngCommandTests
     }
 
     [Fact]
-    public void ConvertToPngCommand_PathProperty_ShouldAcceptFromPipeline()
+    public void ConvertToPngCommand_ShouldHaveSvgContentProperty()
+    {
+        // Arrange
+        var cmdlet = new ConvertToPngCommand();
+
+        // Act & Assert
+        Assert.NotNull(cmdlet.GetType().GetProperty("SvgContent"));
+    }
+
+    [Fact]
+    public void ConvertToPngCommand_ShouldHaveCorrectParameterSets()
+    {
+        // Arrange
+        var cmdletType = typeof(ConvertToPngCommand);
+        var pathProperty = cmdletType.GetProperty("Path");
+        var svgContentProperty = cmdletType.GetProperty("SvgContent");
+
+        // Act
+        var pathParameterAttributes = pathProperty?.GetCustomAttributes(typeof(ParameterAttribute), false).Cast<ParameterAttribute>().ToArray();
+        var svgContentParameterAttributes = svgContentProperty?.GetCustomAttributes(typeof(ParameterAttribute), false).Cast<ParameterAttribute>().ToArray();
+
+        // Assert
+        Assert.NotNull(pathParameterAttributes);
+        Assert.NotNull(svgContentParameterAttributes);
+        Assert.NotEmpty(pathParameterAttributes);
+        Assert.NotEmpty(svgContentParameterAttributes);
+
+        var pathParameterSet = pathParameterAttributes[0].ParameterSetName;
+        var svgContentParameterSet = svgContentParameterAttributes[0].ParameterSetName;
+
+        Assert.Equal("Path", pathParameterSet);
+        Assert.Equal("SvgContent", svgContentParameterSet);
+        Assert.NotEqual(pathParameterSet, svgContentParameterSet); // Should be different parameter sets
+    }
+
+    [Fact]
+    public void ConvertToPngCommand_SvgContentProperty_ShouldAcceptFromPipeline()
+    {
+        // Arrange
+        var cmdletType = typeof(ConvertToPngCommand);
+        var svgContentProperty = cmdletType.GetProperty("SvgContent");
+
+        // Act
+        var parameterAttributes = svgContentProperty?.GetCustomAttributes(typeof(ParameterAttribute), false).Cast<ParameterAttribute>().ToArray();
+
+        // Assert
+        Assert.NotNull(parameterAttributes);
+        Assert.NotEmpty(parameterAttributes);
+        Assert.True(parameterAttributes[0].ValueFromPipeline);
+    }
+
+    [Fact]
+    public void ConvertToPngCommand_PathProperty_ShouldBeInPathParameterSet()
     {
         // Arrange
         var cmdletType = typeof(ConvertToPngCommand);
         var pathProperty = cmdletType.GetProperty("Path");
 
         // Act
-        var pathParameterAttributes = pathProperty?.GetCustomAttributes(typeof(ParameterAttribute), false).Cast<ParameterAttribute>().ToArray();
+        var parameterAttributes = pathProperty?.GetCustomAttributes(typeof(ParameterAttribute), false).Cast<ParameterAttribute>().ToArray();
 
         // Assert
-        Assert.NotNull(pathParameterAttributes);
-        Assert.NotEmpty(pathParameterAttributes);
-        Assert.True(pathParameterAttributes[0].ValueFromPipeline);
-        Assert.Equal("Path to the SVG file to convert, or SVG content string", pathParameterAttributes[0].HelpMessage);
+        Assert.NotNull(parameterAttributes);
+        Assert.NotEmpty(parameterAttributes);
+        Assert.Equal("Path", parameterAttributes[0].ParameterSetName);
+        Assert.True(parameterAttributes[0].ValueFromPipelineByPropertyName);
+        Assert.False(parameterAttributes[0].ValueFromPipeline); // Path should NOT accept direct pipeline input
     }
 }
