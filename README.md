@@ -28,15 +28,8 @@ ConvertTo-Png -Path "test.svg" |% { ConvertTo-Sixel -stream $_ }
 
 ## Installation
 
-### From Source
 ```powershell
-# Clone and build
-git clone https://github.com/calvo-software/PwrSvg.git
-cd PwrSvg/PwrSvg
-dotnet publish -c Release -o bin/Publish
-
-# Import module
-Import-Module ./bin/Publish/PwrSvg.dll
+Install-Module -Name PwrSvg
 ```
 
 ## Usage
@@ -75,25 +68,6 @@ Get-ChildItem "*.svg" | ForEach-Object {
 
 ## Installation
 
-### Method 1: Use Published Build (Recommended)
-
-```powershell
-# Build and publish the module
-cd PwrSvg
-dotnet publish -c Release -f net8.0 -o bin/Publish
-
-# Import the published module
-Import-Module ./bin/Publish/PwrSvg.dll
-```
-
-### Method 2: Windows PowerShell (.NET Framework)
-
-```powershell
-# For Windows PowerShell 5.1
-dotnet publish -c Release -f net48 -o bin/Publish-Net48
-Import-Module ./bin/Publish-Net48/PwrSvg.dll
-```
-
 ## Requirements
 
 - PowerShell 5.1 or later
@@ -108,3 +82,25 @@ This module uses:
 - **PowerShell Cmdlets**: Native PowerShell integration
 
 Designed for headless server environments and terminal workflows. SkiaSharp provides superior SVG processing with automatic dimension detection from the SVG content structure.
+
+## Building from Source
+
+If you prefer to build from source instead of using the published module:
+
+### Method 1: .NET 8.0 (Recommended)
+```powershell
+# Clone and build
+git clone https://github.com/calvo-software/PwrSvg.git
+cd PwrSvg/PwrSvg
+dotnet publish -c Release -f net8.0 -o bin/Publish
+
+# Import the published module
+Import-Module ./bin/Publish/PwrSvg.dll
+```
+
+### Method 2: Windows PowerShell (.NET Framework)
+```powershell
+# For Windows PowerShell 5.1
+dotnet publish -c Release -f net48 -o bin/Publish-Net48
+Import-Module ./bin/Publish-Net48/PwrSvg.dll
+```
