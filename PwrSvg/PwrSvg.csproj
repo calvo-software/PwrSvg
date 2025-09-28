@@ -1,0 +1,30 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net48</TargetFrameworks>
+    <Authors>Oscar Calvo</Authors>
+    <Description>PowerShell module for rendering SVG files to raw image buffers using SkiaSharp, optimized for terminal and pipeline integration.</Description>
+    <!-- Ensure native libraries are copied to output -->
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+  </PropertyGroup>
+
+  <!-- .NET 8.0 specific settings -->
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net8.0'">
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  
+  <!-- .NET Framework 4.8 specific settings -->
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net48'">
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="SkiaSharp" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux" />
+    <PackageReference Include="Svg.Skia" />
+    <PackageReference Include="PowerShellStandard.Library" />
+  </ItemGroup>
+
+</Project>
