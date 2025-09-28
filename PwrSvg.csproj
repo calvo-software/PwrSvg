@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <AssemblyTitle>PwrSvg</AssemblyTitle>
+    <AssemblyDescription>PowerShell module for rendering SVG files to raw image buffers using SkiaSharp</AssemblyDescription>
+    <AssemblyCompany>calvo-software</AssemblyCompany>
+    <AssemblyProduct>PwrSvg</AssemblyProduct>
+    <AssemblyVersion>1.0.0</AssemblyVersion>
+    <AssemblyFileVersion>1.0.0</AssemblyFileVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="PowerShellStandard.Library" Version="5.1.1" />
+    <PackageReference Include="SkiaSharp" Version="2.88.8" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux" Version="2.88.8" />
+    <PackageReference Include="Svg.Skia" Version="1.0.0" />
+  </ItemGroup>
+
+</Project>
