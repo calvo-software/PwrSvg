@@ -107,18 +107,6 @@ jobs:
         dotnet publish PwrSvg/PwrSvg.csproj -c Release -f net48 -o ./PowerShellGallery/PwrSvg/net48
       shell: pwsh
         
-    - name: Upload .NET 8.0 Package  
-      uses: actions/upload-artifact@v4
-      with:
-        name: PwrSvg-net8.0
-        path: ./PowerShellGallery/PwrSvg/net8/
-        
-    - name: Upload .NET Framework 4.8 Package
-      uses: actions/upload-artifact@v4
-      with:
-        name: PwrSvg-net48  
-        path: ./PowerShellGallery/PwrSvg/net48/
-        
     - name: Upload Unified PowerShell Gallery Package
       uses: actions/upload-artifact@v4
       with:
