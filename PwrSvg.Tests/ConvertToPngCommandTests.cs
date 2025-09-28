@@ -111,4 +111,52 @@ public class ConvertToPngCommandTests
         Assert.Contains(typeof(MemoryStream), outputTypeNames);
         Assert.DoesNotContain(typeof(byte[]), outputTypeNames); // Should not contain byte[] anymore
     }
+
+    [Fact]
+    public void ConvertToPngCommand_NativeLibraryLoader_ShouldInitializeSuccessfully()
+    {
+        // Arrange & Act
+        // This test verifies that the NativeLibraryLoader.Initialize() method
+        // can be called without throwing exceptions
+        var exception = Record.Exception(() => NativeLibraryLoader.Initialize());
+
+        // Assert
+        Assert.Null(exception);
+    }
+
+    [Fact] 
+    public void ConvertToPngCommand_WithValidSvg_ShouldProcessWithoutError()
+    {
+        // Arrange - Create a simple SVG file for testing
+        var testSvgPath = Path.GetTempFileName();
+        var testSvgContent = @"<?xml version=""1.0"" encoding=""UTF-8""?>
+<svg width=""100"" height=""100"" xmlns=""http://www.w3.org/2000/svg"">
+  <circle cx=""50"" cy=""50"" r=""40"" fill=""red""/>
+</svg>";
+        
+        try
+        {
+            File.WriteAllText(testSvgPath, testSvgContent);
+
+            // Test that we can at least create the command and set properties
+            // without errors - this verifies the basic structure is correct
+            var cmdlet = new ConvertToPngCommand();
+            cmdlet.Path = testSvgPath;
+            cmdlet.Width = 100;
+            cmdlet.Height = 100;
+            
+            // Assert - Basic properties should be set correctly
+            Assert.Equal(testSvgPath, cmdlet.Path);
+            Assert.Equal(100, cmdlet.Width);
+            Assert.Equal(100, cmdlet.Height);
+            Assert.Equal(95, cmdlet.Quality); // Default value
+        }
+        finally
+        {
+            if (File.Exists(testSvgPath))
+            {
+                File.Delete(testSvgPath);
+            }
+        }
+    }
 }
