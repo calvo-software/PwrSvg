@@ -1,7 +1,7 @@
 <Project>
   <ItemGroup>
     <PackageVersion Include="SkiaSharp" Version="2.88.8" />
-    <PackageVersion Include="SkiaSharp.NativeAssets.Linux" Version="2.88.8" />
+    <PackageVersion Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="2.88.8" />
     <PackageVersion Include="Svg.Skia" Version="1.0.0.18" />
     <PackageVersion Include="PowerShellStandard.Library" Version="5.1.1" />
     <!-- Test packages -->
