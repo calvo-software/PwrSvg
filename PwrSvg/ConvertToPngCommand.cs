@@ -1,11 +1,8 @@
 using System;
 using System.IO;
 using System.Management.Automation;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.ImageSharp.Formats.Png;
-using SixLabors.ImageSharp.Processing;
-using SixLabors.ImageSharp.Drawing.Processing;
+using SkiaSharp;
+using Svg.Skia;
 
 namespace PwrSvg
 {
@@ -38,22 +35,22 @@ namespace PwrSvg
         public string? OutFile { get; set; }
 
         /// <summary>
-        /// Width of the output image. If not specified, uses default 400
+        /// Width of the output image. If not specified, uses SVG's natural width
         /// </summary>
         [Parameter(
             Mandatory = false,
             HelpMessage = "Width of the output image")]
         [ValidateRange(1, int.MaxValue)]
-        public int Width { get; set; } = 400;
+        public int Width { get; set; } = 0;
 
         /// <summary>
-        /// Height of the output image. If not specified, uses default 400
+        /// Height of the output image. If not specified, uses SVG's natural height
         /// </summary>
         [Parameter(
             Mandatory = false,
             HelpMessage = "Height of the output image")]
         [ValidateRange(1, int.MaxValue)]
-        public int Height { get; set; } = 400;
+        public int Height { get; set; } = 0;
 
         /// <summary>
         /// Background color for the PNG. Default is transparent
@@ -111,43 +108,69 @@ namespace PwrSvg
 
                 WriteVerbose($"Processing SVG file: {svgFilePath}");
 
-                // For now, create a demonstration PNG with text indicating SVG processing
-                // This is a proof of concept until full SVG parsing is implemented
-                var svgContent = File.ReadAllText(svgFilePath);
-                WriteVerbose($"SVG content length: {svgContent.Length} characters");
+                // Load SVG using Svg.Skia
+                var svg = new SKSvg();
+                var svgDocument = svg.Load(svgFilePath);
+                if (svgDocument == null)
+                {
+                    WriteError(new ErrorRecord(
+                        new InvalidOperationException($"Failed to load SVG file: {svgFilePath}"),
+                        "SvgLoadFailed",
+                        ErrorCategory.InvalidData,
+                        svgFilePath));
+                    return;
+                }
+
+                // Determine output dimensions
+                var bounds = svgDocument.CullRect;
+                var outputWidth = Width > 0 ? Width : (int)Math.Ceiling(bounds.Width);
+                var outputHeight = Height > 0 ? Height : (int)Math.Ceiling(bounds.Height);
+
+                if (outputWidth <= 0 || outputHeight <= 0)
+                {
+                    WriteError(new ErrorRecord(
+                        new InvalidOperationException($"Invalid output dimensions: {outputWidth}x{outputHeight}"),
+                        "InvalidDimensions",
+                        ErrorCategory.InvalidData,
+                        null));
+                    return;
+                }
+
+                WriteVerbose($"Output dimensions: {outputWidth}x{outputHeight}");
 
                 // Parse background color
                 var backgroundColor = ParseBackgroundColor(BackgroundColor);
 
-                WriteVerbose($"Output dimensions: {Width}x{Height}");
-
-                // Create image using ImageSharp
-                using var image = new Image<Rgba32>(Width, Height);
+                // Create bitmap and render
+                using var surface = SKSurface.Create(new SKImageInfo(outputWidth, outputHeight, SKColorType.Rgba8888, SKAlphaType.Premul));
+                var canvas = surface.Canvas;
                 
-                // Fill with background color
-                image.Mutate(ctx =>
+                // Clear with background color
+                canvas.Clear(backgroundColor);
+
+                // Scale to fit if dimensions were specified
+                if (Width > 0 || Height > 0)
                 {
-                    if (backgroundColor != Color.Transparent)
-                    {
-                        ctx.BackgroundColor(backgroundColor);
-                    }
+                    var scaleX = outputWidth / bounds.Width;
+                    var scaleY = outputHeight / bounds.Height;
+                    var scale = Math.Min(scaleX, scaleY);
                     
-                    // Draw a simple demonstration indicating SVG was processed
-                    // This is a proof of concept - full SVG parsing would be implemented here
-                    WriteVerbose("Drawing proof-of-concept shapes");
-                });
+                    canvas.Scale(scale, scale);
+                    
+                    // Center the image
+                    var offsetX = (outputWidth - bounds.Width * scale) / 2 / scale;
+                    var offsetY = (outputHeight - bounds.Height * scale) / 2 / scale;
+                    canvas.Translate(offsetX, offsetY);
+                }
 
-                // Encode to PNG
-                using var memoryStream = new MemoryStream();
-                var encoder = new PngEncoder
-                {
-                    CompressionLevel = Quality < 30 ? PngCompressionLevel.BestCompression :
-                                     Quality < 70 ? PngCompressionLevel.DefaultCompression :
-                                     PngCompressionLevel.BestSpeed
-                };
-                
-                image.SaveAsPng(memoryStream, encoder);
-                var pngBytes = memoryStream.ToArray();
+                // Render SVG
+                canvas.DrawPicture(svgDocument);
+                canvas.Flush();
+
+                // Create image and encode to PNG
+                using var image = surface.Snapshot();
+                using var data = image.Encode(SKEncodedImageFormat.Png, Quality);
+                var pngBytes = data.ToArray();
 
                 WriteVerbose($"Generated PNG: {pngBytes.Length} bytes");
 
@@ -177,41 +200,40 @@ namespace PwrSvg
             }
         }
 
-        private Color ParseBackgroundColor(string colorString)
+        private SKColor ParseBackgroundColor(string colorString)
         {
             if (string.IsNullOrEmpty(colorString) || colorString.Equals("Transparent", StringComparison.OrdinalIgnoreCase))
             {
-                return Color.Transparent;
+                return SKColors.Transparent;
             }
 
             if (colorString.Equals("White", StringComparison.OrdinalIgnoreCase))
             {
-                return Color.White;
+                return SKColors.White;
             }
 
             if (colorString.Equals("Black", StringComparison.OrdinalIgnoreCase))
             {
-                return Color.Black;
+                return SKColors.Black;
             }
 
             // Try to parse hex color
-            if (colorString.StartsWith("#") && colorString.Length == 7)
+            if (colorString.StartsWith("#"))
             {
-                try
+                if (SKColor.TryParse(colorString, out var color))
                 {
-                    int r = Convert.ToInt32(colorString.Substring(1, 2), 16);
-                    int g = Convert.ToInt32(colorString.Substring(3, 2), 16);
-                    int b = Convert.ToInt32(colorString.Substring(5, 2), 16);
-                    return Color.FromRgb((byte)r, (byte)g, (byte)b);
-                }
-                catch
-                {
-                    // Fall through to warning
+                    return color;
                 }
             }
 
+            // Try to parse named color
+            if (SKColor.TryParse(colorString, out var namedColor))
+            {
+                return namedColor;
+            }
+
             WriteWarning($"Could not parse color '{colorString}', using transparent");
-            return Color.Transparent;
+            return SKColors.Transparent;
         }
     }
 }
