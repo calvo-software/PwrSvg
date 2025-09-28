@@ -7,10 +7,10 @@ See PwrSvg in action with terminal graphics rendering:
 
 ```powershell
 # Direct SVG string to terminal
-"<svg width='100' height='100'><circle cx='50' cy='50' r='40' fill='#ff6b6b' stroke='#333' stroke-width='3'/></svg>" | ConvertTo-Png | ConvertTo-Sixel -stream
+"<svg width='100' height='100'><circle cx='50' cy='50' r='40' fill='#ff6b6b' stroke='#333' stroke-width='3'/></svg>" | ConvertTo-Png |% { ConvertTo-Sixel -stream $_ }
 
 # Or use existing SVG files
-ConvertTo-Png -Path "test.svg" | ConvertTo-Sixel -stream
+ConvertTo-Png -Path "test.svg" |% { ConvertTo-Sixel -stream $_ }
 ```
 
 ![Terminal Demo](https://github.com/calvo-software/PwrSvg/assets/terminal-demo.gif)

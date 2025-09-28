@@ -10,14 +10,14 @@ This file documents what the terminal animation demo should showcase:
 1. Start with empty terminal showing PowerShell prompt
 2. Type the command:
    ```powershell
-   "<svg width='100' height='100'><circle cx='50' cy='50' r='40' fill='#ff6b6b' stroke='#333' stroke-width='3'/></svg>" | ConvertTo-Png | ConvertTo-Sixel -stream
+   "<svg width='100' height='100'><circle cx='50' cy='50' r='40' fill='#ff6b6b' stroke='#333' stroke-width='3'/></svg>" | ConvertTo-Png |% { ConvertTo-Sixel -stream $_ }
    ```
 3. Show the command execution
 4. Display the rendered circle appearing directly in the terminal using Sixel graphics
 5. Show the PowerShell prompt returning, demonstrating the pipeline completed
 6. Optionally show a second example with the test.svg file:
    ```powershell
-   ConvertTo-Png -Path "test.svg" | ConvertTo-Sixel -stream
+   ConvertTo-Png -Path "test.svg" |% { ConvertTo-Sixel -stream $_ }
    ```
 
 ## Technical Notes
