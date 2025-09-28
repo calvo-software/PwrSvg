@@ -111,4 +111,21 @@ public class ConvertToPngCommandTests
         Assert.Contains(typeof(MemoryStream), outputTypeNames);
         Assert.DoesNotContain(typeof(byte[]), outputTypeNames); // Should not contain byte[] anymore
     }
+
+    [Fact]
+    public void ConvertToPngCommand_PathProperty_ShouldAcceptFromPipeline()
+    {
+        // Arrange
+        var cmdletType = typeof(ConvertToPngCommand);
+        var pathProperty = cmdletType.GetProperty("Path");
+
+        // Act
+        var pathParameterAttributes = pathProperty?.GetCustomAttributes(typeof(ParameterAttribute), false).Cast<ParameterAttribute>().ToArray();
+
+        // Assert
+        Assert.NotNull(pathParameterAttributes);
+        Assert.NotEmpty(pathParameterAttributes);
+        Assert.True(pathParameterAttributes[0].ValueFromPipeline);
+        Assert.Equal("Path to the SVG file to convert, or SVG content string", pathParameterAttributes[0].HelpMessage);
+    }
 }

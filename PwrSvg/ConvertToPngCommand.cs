@@ -7,21 +7,21 @@ using Svg.Skia;
 namespace PwrSvg
 {
     /// <summary>
-    /// ConvertTo-Png cmdlet for converting SVG files to PNG format
+    /// ConvertTo-Png cmdlet for converting SVG files or SVG content strings to PNG format
     /// </summary>
     [Cmdlet(VerbsData.ConvertTo, "Png")]
     [OutputType(typeof(MemoryStream), typeof(FileInfo))]
     public class ConvertToPngCommand : PSCmdlet
     {
         /// <summary>
-        /// Path to the SVG file to convert
+        /// Path to the SVG file to convert, or SVG content string
         /// </summary>
         [Parameter(
             Position = 0,
             Mandatory = true,
             ValueFromPipeline = true,
             ValueFromPipelineByPropertyName = true,
-            HelpMessage = "Path to the SVG file to convert")]
+            HelpMessage = "Path to the SVG file to convert, or SVG content string")]
         [ValidateNotNullOrEmpty]
         public string Path { get; set; }
 
@@ -73,7 +73,7 @@ namespace PwrSvg
         {
             try
             {
-                // Validate input file
+                // Validate input
                 if (string.IsNullOrEmpty(Path))
                 {
                     WriteError(new ErrorRecord(
@@ -83,30 +83,6 @@ namespace PwrSvg
                         Path));
                     return;
                 }
-
-                var resolvedPath = GetResolvedProviderPathFromPSPath(Path, out var provider);
-                if (resolvedPath.Count == 0)
-                {
-                    WriteError(new ErrorRecord(
-                        new FileNotFoundException($"Cannot find path '{Path}'"),
-                        "PathNotFound",
-                        ErrorCategory.ObjectNotFound,
-                        Path));
-                    return;
-                }
-
-                var svgFilePath = resolvedPath[0];
-                if (!File.Exists(svgFilePath))
-                {
-                    WriteError(new ErrorRecord(
-                        new FileNotFoundException($"SVG file not found: {svgFilePath}"),
-                        "SvgFileNotFound",
-                        ErrorCategory.ObjectNotFound,
-                        svgFilePath));
-                    return;
-                }
-
-                WriteVerbose($"Processing SVG file: {svgFilePath}");
 
                 // Load SVG using Svg.Skia with enhanced error handling
                 SKSvg svg;
@@ -133,29 +109,72 @@ namespace PwrSvg
 
                 try
                 {
-                    WriteVerbose($"Loading SVG document: {svgFilePath}");
-                    svgDocument = svg.Load(svgFilePath);
-                    WriteVerbose("SVG document loaded successfully.");
+                    // Determine if the input is SVG content or a file path
+                    bool isSvgContent = Path.TrimStart().StartsWith("<") && Path.TrimEnd().EndsWith(">") && Path.Contains("<svg");
+                    
+                    if (isSvgContent)
+                    {
+                        // Handle SVG content string input
+                        WriteVerbose("Processing SVG content string");
+                        WriteVerbose($"Loading SVG from content: {Path.Substring(0, Math.Min(100, Path.Length))}...");
+                        
+                        // Load SVG from string using a MemoryStream
+                        using (var stream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(Path)))
+                        {
+                            svgDocument = svg.Load(stream);
+                        }
+                        WriteVerbose("SVG document loaded successfully from content string.");
+                    }
+                    else
+                    {
+                        // Handle file path input
+                        var resolvedPath = GetResolvedProviderPathFromPSPath(Path, out var provider);
+                        if (resolvedPath.Count == 0)
+                        {
+                            WriteError(new ErrorRecord(
+                                new FileNotFoundException($"Cannot find path '{Path}'"),
+                                "PathNotFound",
+                                ErrorCategory.ObjectNotFound,
+                                Path));
+                            return;
+                        }
+
+                        var svgFilePath = resolvedPath[0];
+                        if (!File.Exists(svgFilePath))
+                        {
+                            WriteError(new ErrorRecord(
+                                new FileNotFoundException($"SVG file not found: {svgFilePath}"),
+                                "SvgFileNotFound",
+                                ErrorCategory.ObjectNotFound,
+                                svgFilePath));
+                            return;
+                        }
+
+                        WriteVerbose($"Processing SVG file: {svgFilePath}");
+                        WriteVerbose($"Loading SVG document: {svgFilePath}");
+                        svgDocument = svg.Load(svgFilePath);
+                        WriteVerbose("SVG document loaded successfully.");
+                    }
                 }
                 catch (Exception ex)
                 {
                     WriteError(new ErrorRecord(
                         new InvalidOperationException(
-                            $"Failed to load SVG file: {svgFilePath}. " +
+                            $"Failed to load SVG. " +
                             $"Error details: {ex.ToString()}"),
                         "SvgLoadException",
                         ErrorCategory.InvalidData,
-                        svgFilePath));
+                        Path));
                     return;
                 }
                 
                 if (svgDocument == null)
                 {
                     WriteError(new ErrorRecord(
-                        new InvalidOperationException($"Failed to load SVG file: {svgFilePath} - SVG document is null"),
+                        new InvalidOperationException($"Failed to load SVG: {Path} - SVG document is null"),
                         "SvgLoadFailed",
                         ErrorCategory.InvalidData,
-                        svgFilePath));
+                        Path));
                     return;
                 }
 
