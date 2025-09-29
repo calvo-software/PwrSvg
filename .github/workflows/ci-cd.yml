@@ -8,6 +8,13 @@ on:
   release:
     types: [ published ]
 
+# Required permissions for test reporting
+permissions:
+  contents: read
+  actions: read
+  checks: write
+  pull-requests: write
+
 env:
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
   DOTNET_NOLOGO: true
@@ -56,23 +63,60 @@ jobs:
         $config.Run.Path = './PwrSvg.Integration.Tests.ps1'
         $config.Output.Verbosity = 'Detailed'
         
-        # Run Pester with configuration
-        $testResults = Invoke-Pester -Configuration $config
-        
-        if ($testResults.FailedCount -gt 0) {
-          Write-Host "❌ Pester integration tests failed: $($testResults.FailedCount) failed out of $($testResults.TotalCount) tests" -ForegroundColor Red
+        # Run Pester with configuration and capture results
+        try {
+          $testResults = Invoke-Pester -Configuration $config
+          
+          if ($testResults.FailedCount -gt 0) {
+            Write-Host "❌ Pester integration tests failed: $($testResults.FailedCount) failed out of $($testResults.TotalCount) tests" -ForegroundColor Red
+            # Don't exit immediately - let the test reporter process the results
+          } else {
+            Write-Host "✅ All Pester integration tests passed: $($testResults.PassedCount)/$($testResults.TotalCount)" -ForegroundColor Green
+          }
+          
+          # Ensure test results file exists for the reporter
+          if (-not (Test-Path 'pester-test-results.xml')) {
+            Write-Host "⚠️  Test results file not found, creating empty results file" -ForegroundColor Yellow
+            @"
+        <?xml version="1.0" encoding="utf-8"?>
+        <testsuites name="Pester" tests="0" errors="1" failures="0" time="0">
+          <testsuite name="Pipeline Error" tests="1" errors="1" failures="0" time="0">
+            <testcase name="Test execution failed" classname="Pipeline" time="0">
+              <error message="Pester test execution failed - no results generated"/>
+            </testcase>
+          </testsuite>
+        </testsuites>
+        "@ | Out-File -FilePath 'pester-test-results.xml' -Encoding UTF8
+          }
+          
+          # Exit with failure code if tests failed, but after generating the report
+          if ($testResults.FailedCount -gt 0) {
+            exit 1
+          }
+        } catch {
+          Write-Host "❌ Error running Pester tests: $_" -ForegroundColor Red
+          # Create error report for test reporter
+          @"
+        <?xml version="1.0" encoding="utf-8"?>
+        <testsuites name="Pester" tests="0" errors="1" failures="0" time="0">
+          <testsuite name="Pipeline Error" tests="1" errors="1" failures="0" time="0">
+            <testcase name="Pester execution error" classname="Pipeline" time="0">
+              <error message="$($_.Exception.Message)"/>
+            </testcase>
+          </testsuite>
+        </testsuites>
+        "@ | Out-File -FilePath 'pester-test-results.xml' -Encoding UTF8
           exit 1
         }
-        Write-Host "✅ All Pester integration tests passed: $($testResults.PassedCount)/$($testResults.TotalCount)" -ForegroundColor Green
 
     - name: Publish Pester Test Results
       uses: dorny/test-reporter@v1
-      if: success() || failure()  # Run even if tests failed
+      if: always()  # Always run to show test results
       with:
         name: Pester Integration Tests
         path: pester-test-results.xml
         reporter: java-junit
-        fail-on-error: true
+        fail-on-error: false  # Let the previous step handle the failure
       
     - name: Test PowerShell module import (.NET 8.0 - Cross-Platform)
       shell: pwsh

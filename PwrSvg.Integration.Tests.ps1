@@ -20,6 +20,21 @@ BeforeAll {
     $script:RepositoryRoot = $PSScriptRoot
     $script:PublishPath = Join-Path $RepositoryRoot "TestPublish"
     
+    # Auto-detect build configuration (prefer Release, fall back to Debug)
+    $releasePath = Join-Path $RepositoryRoot "PwrSvg" "bin" "Release"
+    $debugPath = Join-Path $RepositoryRoot "PwrSvg" "bin" "Debug"
+    
+    if (Test-Path $releasePath) {
+        $script:BuildConfig = "Release"
+        Write-Host "Using Release build artifacts" -ForegroundColor Green
+    } elseif (Test-Path $debugPath) {
+        $script:BuildConfig = "Debug" 
+        Write-Host "Using Debug build artifacts" -ForegroundColor Yellow
+    } else {
+        $script:BuildConfig = "Release"  # Default assumption for CI
+        Write-Host "No build artifacts found, assuming Release configuration" -ForegroundColor Yellow
+    }
+    
     # Clean up any existing test publish directory
     if (Test-Path $script:PublishPath) {
         Remove-Item $script:PublishPath -Recurse -Force
@@ -30,13 +45,13 @@ Describe "PwrSvg Module Build and Integration Tests" {
     
     Context "Module Build Artifacts" {
         It "should have .NET 8.0 build artifacts" {
-            $dllPath = Join-Path $script:RepositoryRoot "PwrSvg" "bin" "Debug" "net8.0" "PwrSvg.dll"
+            $dllPath = Join-Path $script:RepositoryRoot "PwrSvg" "bin" $script:BuildConfig "net8.0" "PwrSvg.dll"
             $dllPath | Should -Exist -Because ".NET 8.0 build should produce DLL"
             (Get-Item $dllPath).Length | Should -BeGreaterThan 0 -Because "DLL should not be empty"
         }
         
         It "should have .NET Framework 4.8 build artifacts" {
-            $dllPath = Join-Path $script:RepositoryRoot "PwrSvg" "bin" "Debug" "net48" "PwrSvg.dll"
+            $dllPath = Join-Path $script:RepositoryRoot "PwrSvg" "bin" $script:BuildConfig "net48" "PwrSvg.dll"
             $dllPath | Should -Exist -Because ".NET Framework 4.8 build should produce DLL"
             (Get-Item $dllPath).Length | Should -BeGreaterThan 0 -Because "DLL should not be empty"
         }
@@ -64,7 +79,7 @@ Describe "PwrSvg Module Build and Integration Tests" {
             New-Item -ItemType Directory -Path (Join-Path $script:PublishPath "net48") -Force | Out-Null
             
             # Copy .NET 8.0 build artifacts
-            $net8Source = Join-Path $script:RepositoryRoot "PwrSvg" "bin" "Debug" "net8.0"
+            $net8Source = Join-Path $script:RepositoryRoot "PwrSvg" "bin" $script:BuildConfig "net8.0"
             $net8Dest = Join-Path $script:PublishPath "net8"
             if (Test-Path $net8Source) {
                 Copy-Item "$net8Source\*" $net8Dest -Recurse -Force
@@ -74,7 +89,7 @@ Describe "PwrSvg Module Build and Integration Tests" {
             }
             
             # Copy .NET Framework 4.8 build artifacts  
-            $net48Source = Join-Path $script:RepositoryRoot "PwrSvg" "bin" "Debug" "net48"
+            $net48Source = Join-Path $script:RepositoryRoot "PwrSvg" "bin" $script:BuildConfig "net48"
             $net48Dest = Join-Path $script:PublishPath "net48"
             if (Test-Path $net48Source) {
                 Copy-Item "$net48Source\*" $net48Dest -Recurse -Force
