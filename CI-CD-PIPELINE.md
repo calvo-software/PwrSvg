@@ -74,8 +74,11 @@ The pipeline includes comprehensive testing at multiple levels:
 - **Coverage**: Module build artifact validation, module layout creation from existing builds, import testing, file existence checks, error handling
 - **Approach**: Tests existing build artifacts rather than rebuilding, ensuring we test what we deploy
 - **Configuration Detection**: Automatically detects build configuration (Release in CI, Debug locally)
-- **Reporting**: Generates JUnit XML reports compatible with GitHub Actions and other CI/CD systems
-- **Command**: `pwsh -c "Invoke-Pester ./PwrSvg.Integration.Tests.ps1"`
+- **Multi-Edition Testing**: 
+  - **Windows PowerShell (.NET Framework 4.8)**: Runs on Windows using `powershell.exe`
+  - **PowerShell Core (.NET 8)**: Runs on Unix platforms using `pwsh.exe`
+- **Reporting**: Generates separate JUnit XML reports for each PowerShell edition, compatible with GitHub Actions and other CI/CD systems
+- **Command**: Framework-specific test execution based on PowerShell edition
 - **Convenience Script**: `./Run-PesterTests.ps1`
 - **CI/CD Integration**: Uses `dorny/test-reporter` action for proper test result visualization in GitHub
 

@@ -6,10 +6,20 @@ This directory contains Pester-based integration tests for the PwrSvg PowerShell
 
 The integration tests validate the complete module lifecycle including:
 
-- **Module Build Artifacts**: Verifies that existing build outputs (.NET 8.0 and .NET Framework 4.8) are present and valid
+- **Module Build Artifacts**: Verifies that existing build outputs for the target framework are present and valid
 - **Module Layout Creation**: Creates proper deployment structure from existing build artifacts rather than rebuilding
 - **Module Import**: Tests module import behavior and dependency handling  
 - **Content Validation**: Verifies manifest content and script definitions
+- **PowerShell Edition Compatibility**: Tests framework-specific behavior for both Windows PowerShell (.NET Framework 4.8) and PowerShell Core (.NET 8)
+
+## Multi-Edition Testing Approach
+
+The integration tests automatically detect the PowerShell edition and test the appropriate target framework:
+
+- **Windows PowerShell** (Desktop edition): Tests .NET Framework 4.8 build artifacts
+- **PowerShell Core**: Tests .NET 8 build artifacts
+
+This ensures compatibility across both PowerShell editions and their respective .NET runtimes.
 
 ## Running Tests
 
