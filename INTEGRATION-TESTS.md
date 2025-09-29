@@ -22,6 +22,9 @@ The integration tests validate the complete module lifecycle including:
 # Run with normal output
 ./Run-PesterTests.ps1 -OutputFormat Normal
 
+# Generate JUnit XML report for CI/CD integration
+./Run-PesterTests.ps1 -TestResultFormat JUnitXml -OutputPath "test-results.xml"
+
 # Get test results object
 $results = ./Run-PesterTests.ps1 -PassThru
 ```
@@ -32,8 +35,14 @@ $results = ./Run-PesterTests.ps1 -PassThru
 # Install Pester if needed
 Install-Module -Name Pester -Force -SkipPublisherCheck
 
-# Run tests
-Invoke-Pester ./PwrSvg.Integration.Tests.ps1 -Output Detailed
+# Run tests with modern Pester v5 configuration
+$config = New-PesterConfiguration
+$config.Run.Path = './PwrSvg.Integration.Tests.ps1'
+$config.Output.Verbosity = 'Detailed'
+$config.TestResult.Enabled = $true
+$config.TestResult.OutputFormat = 'JUnitXml'
+$config.TestResult.OutputPath = 'test-results.xml'
+Invoke-Pester -Configuration $config
 ```
 
 ## Test Structure
@@ -57,6 +66,15 @@ The integration tests are designed to be efficient and test what is actually dep
 ## CI/CD Integration
 
 These tests are automatically run in the GitHub Actions pipeline on all supported platforms. The tests are designed to work in CI environments where dependencies like the Sixel module may not be available.
+
+### Test Reporting
+
+The integration tests generate JUnit XML reports that are automatically processed by GitHub Actions using the `dorny/test-reporter` action. This provides:
+
+- ✅ Visual test result summaries in the GitHub Actions UI
+- ✅ Per-test pass/fail status with detailed error messages
+- ✅ Integration with GitHub's check runs and pull request status
+- ✅ Standardized test reporting format compatible with most CI/CD systems
 
 ## Replacing Traditional Integration Tests
 

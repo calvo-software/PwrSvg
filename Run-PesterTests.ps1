@@ -14,15 +14,22 @@
 .EXAMPLE
     ./Run-PesterTests.ps1
     Runs tests with detailed output
+.PARAMETER TestResultFormat
+    Test result output format for CI/CD integration. Default is 'JUnitXml'
+.PARAMETER OutputPath
+    Path where to save the test result report. If not specified, defaults to 'pester-test-results.xml' when TestResultFormat is used
 .EXAMPLE
-    ./Run-PesterTests.ps1 -OutputFormat Normal
-    Runs tests with normal output
+    ./Run-PesterTests.ps1 -TestResultFormat JUnitXml -OutputPath "test-results.xml"
+    Runs tests and generates JUnit XML report for CI/CD integration
 #>
 
 param(
     [ValidateSet('None', 'Normal', 'Detailed', 'Diagnostic')]
     [string]$OutputFormat = 'Detailed',
-    [switch]$PassThru
+    [switch]$PassThru,
+    [string]$OutputPath,
+    [ValidateSet('NUnitXml', 'NUnit2.5', 'NUnit3', 'JUnitXml')]
+    [string]$TestResultFormat = 'JUnitXml'
 )
 
 # Ensure we're in the correct directory
@@ -50,16 +57,24 @@ try {
 
 # Run the tests
 try {
-    $testParams = @{
-        Path = './PwrSvg.Integration.Tests.ps1'
-        Output = $OutputFormat
+    # Create Pester configuration
+    $config = New-PesterConfiguration
+    $config.Run.Path = './PwrSvg.Integration.Tests.ps1'
+    $config.Output.Verbosity = $OutputFormat
+    
+    # Configure test result output if requested
+    if ($TestResultFormat -and ($OutputPath -or $TestResultFormat -eq 'JUnitXml')) {
+        $config.TestResult.Enabled = $true
+        $config.TestResult.OutputFormat = $TestResultFormat
+        $config.TestResult.OutputPath = if ($OutputPath) { $OutputPath } else { 'pester-test-results.xml' }
+        Write-Host "Test results will be saved to: $($config.TestResult.OutputPath) in $TestResultFormat format" -ForegroundColor Yellow
     }
     
     if ($PassThru) {
-        $testParams.PassThru = $true
+        $testResults = Invoke-Pester -Configuration $config
+    } else {
+        $testResults = Invoke-Pester -Configuration $config
     }
-    
-    $testResults = Invoke-Pester @testParams
     
     if ($testResults -and $testResults.FailedCount -gt 0) {
         Write-Host "`n❌ Tests Failed: $($testResults.FailedCount) out of $($testResults.TotalCount)" -ForegroundColor Red

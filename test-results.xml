@@ -1,0 +1,48 @@
+﻿<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<testsuites xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="junit_schema_4.xsd" name="Pester" tests="14" errors="0" failures="6" disabled="0" time="16.555">
+  <testsuite name="/home/runner/work/PwrSvg/PwrSvg/PwrSvg.Integration.Tests.ps1" tests="14" errors="0" failures="6" hostname="runnervm3ublj" id="0" skipped="0" disabled="0" package="/home/runner/work/PwrSvg/PwrSvg/PwrSvg.Integration.Tests.ps1" time="16.555">
+    <properties>
+      <property name="platform" value="Linux" />
+      <property name="machine-name" value="runnervm3ublj" />
+      <property name="user" value="runner" />
+      <property name="framework-version" value="5.7.1" />
+      <property name="clr-version" value="8.0.19" />
+      <property name="user-domain" value="" />
+      <property name="junit-version" value="4" />
+      <property name="cwd" value="/home/runner/work/PwrSvg/PwrSvg" />
+      <property name="os-version" value="6.11.0-1018-azure" />
+    </properties>
+    <testcase name="PwrSvg Module Build and Integration Tests.Module Build Artifacts.should have .NET 8.0 build artifacts" status="Failed" classname="/home/runner/work/PwrSvg/PwrSvg/PwrSvg.Integration.Tests.ps1" assertions="0" time="0.212">
+      <failure message="Expected path '/home/runner/work/PwrSvg/PwrSvg/PwrSvg/bin/Debug/net8.0/PwrSvg.dll' to exist, because .NET 8.0 build should produce DLL, but it did not exist.">at $dllPath | Should -Exist -Because ".NET 8.0 build should produce DLL", /home/runner/work/PwrSvg/PwrSvg/PwrSvg.Integration.Tests.ps1:34
+at &lt;ScriptBlock&gt;, /home/runner/work/PwrSvg/PwrSvg/PwrSvg.Integration.Tests.ps1:34</failure>
+    </testcase>
+    <testcase name="PwrSvg Module Build and Integration Tests.Module Build Artifacts.should have .NET Framework 4.8 build artifacts" status="Failed" classname="/home/runner/work/PwrSvg/PwrSvg/PwrSvg.Integration.Tests.ps1" assertions="0" time="0.013">
+      <failure message="Expected path '/home/runner/work/PwrSvg/PwrSvg/PwrSvg/bin/Debug/net48/PwrSvg.dll' to exist, because .NET Framework 4.8 build should produce DLL, but it did not exist.">at $dllPath | Should -Exist -Because ".NET Framework 4.8 build should produce DLL", /home/runner/work/PwrSvg/PwrSvg/PwrSvg.Integration.Tests.ps1:40
+at &lt;ScriptBlock&gt;, /home/runner/work/PwrSvg/PwrSvg/PwrSvg.Integration.Tests.ps1:40</failure>
+    </testcase>
+    <testcase name="PwrSvg Module Build and Integration Tests.Module Build Artifacts.should have PowerShell module files in source" status="Passed" classname="/home/runner/work/PwrSvg/PwrSvg/PwrSvg.Integration.Tests.ps1" assertions="0" time="0.018" />
+    <testcase name="PwrSvg Module Build and Integration Tests.Module Layout Creation.should create module layout from .NET 8.0 artifacts" status="Failed" classname="/home/runner/work/PwrSvg/PwrSvg/PwrSvg.Integration.Tests.ps1" assertions="0" time="0.067">
+      <failure message="Expected $true, because Should be able to copy .NET 8.0 build artifacts, but got $false.">at $script:Net8CopySuccess | Should -Be $true -Because "Should be able to copy .NET 8.0 build artifacts", /home/runner/work/PwrSvg/PwrSvg/PwrSvg.Integration.Tests.ps1:92
+at &lt;ScriptBlock&gt;, /home/runner/work/PwrSvg/PwrSvg/PwrSvg.Integration.Tests.ps1:92</failure>
+    </testcase>
+    <testcase name="PwrSvg Module Build and Integration Tests.Module Layout Creation.should create module layout from .NET Framework 4.8 artifacts" status="Failed" classname="/home/runner/work/PwrSvg/PwrSvg/PwrSvg.Integration.Tests.ps1" assertions="0" time="0.018">
+      <failure message="Expected $true, because Should be able to copy .NET Framework 4.8 build artifacts, but got $false.">at $script:Net48CopySuccess | Should -Be $true -Because "Should be able to copy .NET Framework 4.8 build artifacts", /home/runner/work/PwrSvg/PwrSvg/PwrSvg.Integration.Tests.ps1:99
+at &lt;ScriptBlock&gt;, /home/runner/work/PwrSvg/PwrSvg/PwrSvg.Integration.Tests.ps1:99</failure>
+    </testcase>
+    <testcase name="PwrSvg Module Build and Integration Tests.Module Layout Creation.should create manifest file at root" status="Passed" classname="/home/runner/work/PwrSvg/PwrSvg/PwrSvg.Integration.Tests.ps1" assertions="0" time="0.006" />
+    <testcase name="PwrSvg Module Build and Integration Tests.Module Layout Creation.should create PowerShell script at root" status="Passed" classname="/home/runner/work/PwrSvg/PwrSvg/PwrSvg.Integration.Tests.ps1" assertions="0" time="0.006" />
+    <testcase name="PwrSvg Module Build and Integration Tests.Module Layout Creation.should create DLL in subdirectory" status="Failed" classname="/home/runner/work/PwrSvg/PwrSvg/PwrSvg.Integration.Tests.ps1" assertions="0" time="0.017">
+      <failure message="Expected path '/home/runner/work/PwrSvg/PwrSvg/TestPublish/net8/PwrSvg.dll' to exist, because DLL should exist in net8 subdirectory, but it did not exist.">at $dllPath | Should -Exist -Because "DLL should exist in net8 subdirectory", /home/runner/work/PwrSvg/PwrSvg/PwrSvg.Integration.Tests.ps1:117
+at &lt;ScriptBlock&gt;, /home/runner/work/PwrSvg/PwrSvg/PwrSvg.Integration.Tests.ps1:117</failure>
+    </testcase>
+    <testcase name="PwrSvg Module Build and Integration Tests.Module Layout Creation.should have valid manifest content" status="Passed" classname="/home/runner/work/PwrSvg/PwrSvg/PwrSvg.Integration.Tests.ps1" assertions="0" time="0.037" />
+    <testcase name="PwrSvg Module Build and Integration Tests.Module Import.should attempt module import" status="Passed" classname="/home/runner/work/PwrSvg/PwrSvg/PwrSvg.Integration.Tests.ps1" assertions="0" time="0.050" />
+    <testcase name="PwrSvg Module Build and Integration Tests.Module Import.should have correct error message for missing dependency" status="Passed" classname="/home/runner/work/PwrSvg/PwrSvg/PwrSvg.Integration.Tests.ps1" assertions="0" time="0.039" />
+    <testcase name="PwrSvg Module Build and Integration Tests.Module Structure Validation.should validate module files exist after publish" status="Failed" classname="/home/runner/work/PwrSvg/PwrSvg/PwrSvg.Integration.Tests.ps1" assertions="0" time="0.049">
+      <failure message="Expected path '/home/runner/work/PwrSvg/PwrSvg/TestPublish/net8/PwrSvg.dll' to exist, because DLL should exist, but it did not exist.">at $dllPath | Should -Exist -Because "DLL should exist", /home/runner/work/PwrSvg/PwrSvg/PwrSvg.Integration.Tests.ps1:170
+at &lt;ScriptBlock&gt;, /home/runner/work/PwrSvg/PwrSvg/PwrSvg.Integration.Tests.ps1:170</failure>
+    </testcase>
+    <testcase name="PwrSvg Module Build and Integration Tests.Module Structure Validation.should have PowerShell script with proper function definition" status="Passed" classname="/home/runner/work/PwrSvg/PwrSvg/PwrSvg.Integration.Tests.ps1" assertions="0" time="0.011" />
+    <testcase name="PwrSvg Module Build and Integration Tests.Test SVG Content Processing.should have valid test SVG content" status="Passed" classname="/home/runner/work/PwrSvg/PwrSvg/PwrSvg.Integration.Tests.ps1" assertions="0" time="0.013" />
+  </testsuite>
+</testsuites>

@@ -73,8 +73,10 @@ The pipeline includes comprehensive testing at multiple levels:
 - **Framework**: Pester (PowerShell testing framework)
 - **Coverage**: Module build artifact validation, module layout creation from existing builds, import testing, file existence checks, error handling
 - **Approach**: Tests existing build artifacts rather than rebuilding, ensuring we test what we deploy
+- **Reporting**: Generates JUnit XML reports compatible with GitHub Actions and other CI/CD systems
 - **Command**: `pwsh -c "Invoke-Pester ./PwrSvg.Integration.Tests.ps1"`
 - **Convenience Script**: `./Run-PesterTests.ps1`
+- **CI/CD Integration**: Uses `dorny/test-reporter` action for proper test result visualization in GitHub
 
 ### End-to-End Tests
 - **Coverage**: PowerShell integration testing, ConvertTo-Png functionality validation

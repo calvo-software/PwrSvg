@@ -47,11 +47,32 @@ jobs:
       shell: pwsh
       run: |
         Write-Host "🧪 Running Pester Integration Tests" -ForegroundColor Green
-        Invoke-Pester ./PwrSvg.Integration.Tests.ps1 -Output Detailed -PassThru | Tee-Object -Variable TestResults
-        if ($TestResults.FailedCount -gt 0) {
-          throw "Pester integration tests failed: $($TestResults.FailedCount) failed out of $($TestResults.TotalCount) tests"
+        
+        # Configure Pester for xUnit XML output
+        $config = New-PesterConfiguration
+        $config.TestResult.Enabled = $true
+        $config.TestResult.OutputFormat = 'JUnitXml'
+        $config.TestResult.OutputPath = 'pester-test-results.xml'
+        $config.Run.Path = './PwrSvg.Integration.Tests.ps1'
+        $config.Output.Verbosity = 'Detailed'
+        
+        # Run Pester with configuration
+        $testResults = Invoke-Pester -Configuration $config
+        
+        if ($testResults.FailedCount -gt 0) {
+          Write-Host "❌ Pester integration tests failed: $($testResults.FailedCount) failed out of $($testResults.TotalCount) tests" -ForegroundColor Red
+          exit 1
         }
-        Write-Host "✅ All Pester integration tests passed: $($TestResults.PassedCount)/$($TestResults.TotalCount)" -ForegroundColor Green
+        Write-Host "✅ All Pester integration tests passed: $($testResults.PassedCount)/$($testResults.TotalCount)" -ForegroundColor Green
+
+    - name: Publish Pester Test Results
+      uses: dorny/test-reporter@v1
+      if: success() || failure()  # Run even if tests failed
+      with:
+        name: Pester Integration Tests
+        path: pester-test-results.xml
+        reporter: java-junit
+        fail-on-error: true
       
     - name: Test PowerShell module import (.NET 8.0 - Cross-Platform)
       shell: pwsh
