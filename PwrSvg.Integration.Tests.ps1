@@ -1,11 +1,11 @@
-#Requires -Modules Pester
-
 <#
 .SYNOPSIS
     Pester integration tests for PwrSvg module
 .DESCRIPTION
     These tests validate the complete module build, structure and import functionality
     replacing the traditional integration-test.ps1 script with a proper Pester framework.
+.NOTES
+    Requires Pester module (automatically installed if not available)
 #>
 
 BeforeAll {
