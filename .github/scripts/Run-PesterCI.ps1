@@ -41,6 +41,27 @@ $config.TestResult.OutputPath = "pester-test-results-$TargetFramework.xml"
 $config.Run.Path = './PwrSvg.Integration.Tests.ps1'
 $config.Output.Verbosity = 'Detailed'
 
+# Verify prerequisites before running tests
+$publishPath = "./publish-$TargetFramework"
+if ($TargetFramework -eq "net8") {
+    $publishPath = "./publish-net8"
+} elseif ($TargetFramework -eq "net48") {
+    $publishPath = "./publish-net48"
+}
+
+Write-Host "Checking for published module at: $publishPath" -ForegroundColor Yellow
+if (-not (Test-Path $publishPath)) {
+    Write-Host "❌ Published module directory not found at $publishPath" -ForegroundColor Red
+    Write-Host "This indicates the PowerShell module import tests did not create the expected directory structure." -ForegroundColor Red
+    Write-Host "Available directories:" -ForegroundColor Yellow
+    Get-ChildItem -Directory | ForEach-Object { Write-Host "  - $($_.Name)" -ForegroundColor Gray }
+    
+    # Create error report
+    $errorXml = "<?xml version=`"1.0`" encoding=`"utf-8`"?><testsuites name=`"Pester`" tests=`"1`" errors=`"1`" failures=`"0`" time=`"0`"><testsuite name=`"Prerequisites`" tests=`"1`" errors=`"1`" failures=`"0`" time=`"0`"><testcase name=`"Published module directory exists`" classname=`"Prerequisites`" time=`"0`"><error message=`"Published module directory not found at $publishPath`"/></testcase></testsuite></testsuites>"
+    $errorXml | Out-File -FilePath "pester-test-results-$TargetFramework.xml" -Encoding UTF8
+    exit 1
+}
+
 # Run Pester with configuration and capture results
 try {
     Write-Host "Executing Pester tests for $PowerShellEdition..." -ForegroundColor Yellow

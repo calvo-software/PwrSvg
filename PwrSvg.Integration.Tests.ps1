@@ -36,6 +36,12 @@ BeforeAll {
     }
     
     Write-Host "Expected published module path: $($script:PublishedModulePath)" -ForegroundColor Yellow
+    
+    # Debug: List available directories for troubleshooting
+    Write-Host "Available directories in repository root:" -ForegroundColor Gray
+    Get-ChildItem -Directory $RepositoryRoot | ForEach-Object { 
+        Write-Host "  - $($_.Name)" -ForegroundColor Gray 
+    }
 }
 
 Describe "PwrSvg Module Integration Tests" {
