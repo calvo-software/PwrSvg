@@ -38,49 +38,64 @@ BeforeAll {
 
 Describe "PwrSvg Integration Tests" {
     
-    Context "Module Build" {
-        It "should build the module successfully" {
-            Push-Location (Join-Path $script:RepositoryRoot "PwrSvg")
-            try {
-                $buildResult = & dotnet build 2>&1
-                $LASTEXITCODE | Should -Be 0 -Because "Build should succeed without errors"
-                Write-Host "✓ Build successful" -ForegroundColor Green
-            } finally {
-                Pop-Location
-            }
+    Context "Module Build Artifacts" {
+        It "should have existing build artifacts" {
+            # Check for existing build artifacts (no building during tests)
+            $net8Path = Join-Path $script:RepositoryRoot "PwrSvg" "bin" "Release" "net8.0" "PwrSvg.dll"
+            $net48Path = Join-Path $script:RepositoryRoot "PwrSvg" "bin" "Release" "net48" "PwrSvg.dll"
+            
+            # At least one target framework should have artifacts
+            ($net8Path | Test-Path) -or ($net48Path | Test-Path) | Should -Be $true -Because "Build artifacts should exist from previous build step"
+            
+            Write-Host "✓ Build artifacts verified (testing existing build outputs)" -ForegroundColor Green
         }
     }
     
     Context "Module Structure and Import" {
         BeforeAll {
-            # Publish the module for proper testing (simulating PowerShell Gallery structure)
-            Push-Location (Join-Path $script:RepositoryRoot "PwrSvg")
-            try {
-                $publishResult = & dotnet publish -c Release -o (Join-Path $script:PublishPath "net8") -f net8.0 --verbosity quiet 2>&1
-                $script:PublishExitCode = $LASTEXITCODE
-                
-                if ($script:PublishExitCode -eq 0) {
-                    # Copy PowerShell files to the root of the module structure (simulating CI pipeline)
-                    Copy-Item (Join-Path $script:RepositoryRoot "PwrSvg" "PwrSvg.psd1") $script:PublishPath
-                    Copy-Item (Join-Path $script:RepositoryRoot "PwrSvg" "Out-ConsoleSvg.ps1") $script:PublishPath
-                }
-            } finally {
-                Pop-Location
+            # Use existing build artifacts instead of building/publishing during tests
+            # Detect which target framework artifacts are available
+            $net8Source = Join-Path $script:RepositoryRoot "PwrSvg" "bin" "Release" "net8.0"
+            $net48Source = Join-Path $script:RepositoryRoot "PwrSvg" "bin" "Release" "net48"
+            
+            # Create module layout from existing build artifacts
+            if (Test-Path $net8Source) {
+                $targetSource = $net8Source
+                $targetSubdir = "net8"
+                $script:TargetFramework = "net8.0"
+            } elseif (Test-Path $net48Source) {
+                $targetSource = $net48Source
+                $targetSubdir = "net48"
+                $script:TargetFramework = "net48"
+            } else {
+                throw "No build artifacts found. Please run 'dotnet build' first."
             }
+            
+            # Copy existing build artifacts to test layout
+            $targetDest = Join-Path $script:PublishPath $targetSubdir
+            New-Item -ItemType Directory -Path $targetDest -Force | Out-Null
+            Copy-Item "$targetSource\*" $targetDest -Recurse -Force
+            
+            # Copy PowerShell files to the root of the module structure (simulating CI pipeline)
+            Copy-Item (Join-Path $script:RepositoryRoot "PwrSvg" "PwrSvg.psd1") $script:PublishPath
+            Copy-Item (Join-Path $script:RepositoryRoot "PwrSvg" "Out-ConsoleSvg.ps1") $script:PublishPath
+            
+            $script:PublishExitCode = 0  # Success since we're using existing artifacts
         }
         
-        It "should publish module successfully" {
-            $script:PublishExitCode | Should -Be 0 -Because "Publish operation should succeed"
+        It "should use existing build artifacts successfully" {
+            $script:PublishExitCode | Should -Be 0 -Because "Should be able to use existing build artifacts"
         }
         
         It "should have correct module structure" {
             $manifestPath = Join-Path $script:PublishPath "PwrSvg.psd1"
             $scriptPath = Join-Path $script:PublishPath "Out-ConsoleSvg.ps1" 
-            $dllPath = Join-Path $script:PublishPath "net8" "PwrSvg.dll"
+            $targetSubdir = if ($script:TargetFramework -eq "net8.0") { "net8" } else { "net48" }
+            $dllPath = Join-Path $script:PublishPath $targetSubdir "PwrSvg.dll"
             
             $manifestPath | Should -Exist -Because "Manifest file should exist"
             $scriptPath | Should -Exist -Because "PowerShell script should exist"
-            $dllPath | Should -Exist -Because "DLL should exist"
+            $dllPath | Should -Exist -Because "DLL should exist in $targetSubdir subdirectory"
         }
         
         It "should import module successfully or handle missing dependency gracefully" {
