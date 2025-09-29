@@ -46,7 +46,8 @@ namespace PwrSvg.Tests
             var manifestContent = System.IO.File.ReadAllText(manifestPath);
             
             // Assert
-            Assert.Contains("RequiredModules = @('Sixel')", manifestContent);
+            // Sixel module is required with specific version
+            Assert.Contains("@{ ModuleName = 'Sixel'; ModuleVersion = '0.6.1' }", manifestContent);
         }
         
         [Fact]
