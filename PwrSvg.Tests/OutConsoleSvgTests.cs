@@ -36,7 +36,7 @@ namespace PwrSvg.Tests
         }
         
         [Fact]
-        public void OutConsoleSvg_ManifestShouldHaveSixelModuleDependency()
+        public void OutConsoleSvg_ManifestShouldHaveNoRequiredModules()
         {
             // Arrange
             var sourceDir = GetSourceDirectoryPath();
@@ -46,7 +46,8 @@ namespace PwrSvg.Tests
             var manifestContent = System.IO.File.ReadAllText(manifestPath);
             
             // Assert
-            Assert.Contains("RequiredModules = @('Sixel')", manifestContent);
+            // Sixel module is optional, not required - users install it separately if needed
+            Assert.Contains("RequiredModules = @()", manifestContent);
         }
         
         [Fact]

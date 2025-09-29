@@ -11,7 +11,7 @@
     CLRVersion = '4.0'
 
     # Required modules
-    RequiredModules = @('Sixel')
+    RequiredModules = @()
 
     # Scripts to process on module import
     ScriptsToProcess = @('Out-ConsoleSvg.ps1')
