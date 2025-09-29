@@ -16,7 +16,8 @@ The CI/CD pipeline is configured with GitHub Actions and includes the following 
 - Install .NET Framework targeting pack (Windows only)
 - Restore NuGet packages
 - Build solution for both target frameworks
-- Run unit tests
+- Run unit tests (xUnit)
+- Run integration tests (Pester)
 - Test PowerShell module import on each platform
 
 ### 2. Create Packages (`package` job)
@@ -61,13 +62,22 @@ The pipeline will:
 
 ## Test Coverage
 
-The pipeline includes comprehensive unit tests covering:
+The pipeline includes comprehensive testing at multiple levels:
 
-- Cmdlet attribute validation
-- Property configuration
-- Output type verification
-- Parameter validation
-- PowerShell integration (where supported)
+### Unit Tests (xUnit)
+- **Framework**: xUnit (.NET testing framework)
+- **Coverage**: Cmdlet attribute validation, property configuration, output type verification, parameter validation
+- **Command**: `dotnet test`
+
+### Integration Tests (Pester)
+- **Framework**: Pester (PowerShell testing framework)
+- **Coverage**: Module build, structure validation, import testing, file existence checks, error handling
+- **Command**: `pwsh -c "Invoke-Pester ./PwrSvg.Integration.Tests.ps1"`
+- **Convenience Script**: `./Run-PesterTests.ps1`
+
+### End-to-End Tests
+- **Coverage**: PowerShell integration testing, ConvertTo-Png functionality validation
+- **Runs on**: All supported platforms (.NET 8.0 cross-platform, .NET Framework 4.8 on Windows)
 
 ## Build Matrix
 
@@ -98,6 +108,9 @@ dotnet build -c Release
 
 # Run tests
 dotnet test -c Release
+
+# Run integration tests
+./Run-PesterTests.ps1
 
 # Test module import
 dotnet publish PwrSvg/PwrSvg.csproj -c Release -f net8.0 -o ./publish
