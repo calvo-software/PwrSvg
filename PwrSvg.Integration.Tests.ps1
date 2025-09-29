@@ -28,52 +28,78 @@ BeforeAll {
 
 Describe "PwrSvg Module Build and Integration Tests" {
     
-    Context "Module Build" {
-        BeforeAll {
-            Push-Location (Join-Path $script:RepositoryRoot "PwrSvg")
-        }
-        
-        AfterAll {
-            Pop-Location
-        }
-        
-        It "should build successfully" {
-            $result = & dotnet build 2>&1
-            $LASTEXITCODE | Should -Be 0 -Because "Build should succeed without errors"
-            $result | Should -Not -Contain "error" -Because "Build output should not contain errors"
-        }
-        
-        It "should build .NET 8.0 target" {
+    Context "Module Build Artifacts" {
+        It "should have .NET 8.0 build artifacts" {
             $dllPath = Join-Path $script:RepositoryRoot "PwrSvg" "bin" "Debug" "net8.0" "PwrSvg.dll"
             $dllPath | Should -Exist -Because ".NET 8.0 build should produce DLL"
+            (Get-Item $dllPath).Length | Should -BeGreaterThan 0 -Because "DLL should not be empty"
         }
         
-        It "should build .NET Framework 4.8 target" {
+        It "should have .NET Framework 4.8 build artifacts" {
             $dllPath = Join-Path $script:RepositoryRoot "PwrSvg" "bin" "Debug" "net48" "PwrSvg.dll"
             $dllPath | Should -Exist -Because ".NET Framework 4.8 build should produce DLL"
+            (Get-Item $dllPath).Length | Should -BeGreaterThan 0 -Because "DLL should not be empty"
+        }
+        
+        It "should have PowerShell module files in source" {
+            $manifestPath = Join-Path $script:RepositoryRoot "PwrSvg" "PwrSvg.psd1"
+            $scriptPath = Join-Path $script:RepositoryRoot "PwrSvg" "Out-ConsoleSvg.ps1"
+            
+            $manifestPath | Should -Exist -Because "Module manifest should exist in source"
+            $scriptPath | Should -Exist -Because "PowerShell script should exist in source"
+            
+            (Get-Item $manifestPath).Length | Should -BeGreaterThan 0 -Because "Manifest should not be empty"
+            (Get-Item $scriptPath).Length | Should -BeGreaterThan 0 -Because "Script should not be empty"
         }
     }
     
-    Context "Module Publishing Structure" {
+    Context "Module Layout Creation" {
         BeforeAll {
-            # Publish the module for testing (simulating PowerShell Gallery structure)
-            Push-Location (Join-Path $script:RepositoryRoot "PwrSvg")
+            # Create module layout from existing build artifacts (simulating deployment structure)
+            # This tests what we actually deploy without rebuilding
             
-            # Publish .NET 8.0 version
-            $script:PublishResult = & dotnet publish -c Release -o (Join-Path $script:PublishPath "net8") -f net8.0 --verbosity quiet 2>&1
-            $script:PublishExitCode = $LASTEXITCODE
+            # Create the module structure using existing build outputs
+            New-Item -ItemType Directory -Path $script:PublishPath -Force | Out-Null
+            New-Item -ItemType Directory -Path (Join-Path $script:PublishPath "net8") -Force | Out-Null
+            New-Item -ItemType Directory -Path (Join-Path $script:PublishPath "net48") -Force | Out-Null
             
-            Pop-Location
-            
-            # Copy PowerShell files to the root (simulating CI pipeline)
-            if ($script:PublishExitCode -eq 0) {
-                Copy-Item (Join-Path $script:RepositoryRoot "PwrSvg" "PwrSvg.psd1") $script:PublishPath
-                Copy-Item (Join-Path $script:RepositoryRoot "PwrSvg" "Out-ConsoleSvg.ps1") $script:PublishPath
+            # Copy .NET 8.0 build artifacts
+            $net8Source = Join-Path $script:RepositoryRoot "PwrSvg" "bin" "Debug" "net8.0"
+            $net8Dest = Join-Path $script:PublishPath "net8"
+            if (Test-Path $net8Source) {
+                Copy-Item "$net8Source\*" $net8Dest -Recurse -Force
+                $script:Net8CopySuccess = $true
+            } else {
+                $script:Net8CopySuccess = $false
             }
+            
+            # Copy .NET Framework 4.8 build artifacts  
+            $net48Source = Join-Path $script:RepositoryRoot "PwrSvg" "bin" "Debug" "net48"
+            $net48Dest = Join-Path $script:PublishPath "net48"
+            if (Test-Path $net48Source) {
+                Copy-Item "$net48Source\*" $net48Dest -Recurse -Force
+                $script:Net48CopySuccess = $true
+            } else {
+                $script:Net48CopySuccess = $false
+            }
+            
+            # Copy PowerShell files to the root (simulating CI pipeline layout)
+            Copy-Item (Join-Path $script:RepositoryRoot "PwrSvg" "PwrSvg.psd1") $script:PublishPath
+            Copy-Item (Join-Path $script:RepositoryRoot "PwrSvg" "Out-ConsoleSvg.ps1") $script:PublishPath
         }
         
-        It "should publish .NET 8.0 target successfully" {
-            $script:PublishExitCode | Should -Be 0 -Because "Publish operation should succeed"
+        It "should create module layout from .NET 8.0 artifacts" {
+            $script:Net8CopySuccess | Should -Be $true -Because "Should be able to copy .NET 8.0 build artifacts"
+            
+            $dllPath = Join-Path $script:PublishPath "net8" "PwrSvg.dll"
+            $dllPath | Should -Exist -Because "DLL should exist in net8 subdirectory"
+        }
+        
+        It "should create module layout from .NET Framework 4.8 artifacts" {
+            $script:Net48CopySuccess | Should -Be $true -Because "Should be able to copy .NET Framework 4.8 build artifacts"
+            
+            $dllPath = Join-Path $script:PublishPath "net48" "PwrSvg.dll" 
+            $dllPath | Should -Exist -Because "DLL should exist in net48 subdirectory"
         }
         
         It "should create manifest file at root" {

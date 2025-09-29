@@ -6,10 +6,9 @@ This directory contains Pester-based integration tests for the PwrSvg PowerShell
 
 The integration tests validate the complete module lifecycle including:
 
-- **Module Building**: Verifies successful compilation for both .NET 8.0 and .NET Framework 4.8
-- **Module Structure**: Validates proper file placement and module structure
-- **Module Publishing**: Tests the publishing process and artifact creation
-- **Module Import**: Tests module import behavior and dependency handling
+- **Module Build Artifacts**: Verifies that existing build outputs (.NET 8.0 and .NET Framework 4.8) are present and valid
+- **Module Layout Creation**: Creates proper deployment structure from existing build artifacts rather than rebuilding
+- **Module Import**: Tests module import behavior and dependency handling  
 - **Content Validation**: Verifies manifest content and script definitions
 
 ## Running Tests
@@ -41,11 +40,19 @@ Invoke-Pester ./PwrSvg.Integration.Tests.ps1 -Output Detailed
 
 The tests are organized into the following contexts:
 
-1. **Module Build**: Tests compilation and build process
-2. **Module Publishing Structure**: Validates published module structure
+1. **Module Build Artifacts**: Tests presence and validity of existing build outputs
+2. **Module Layout Creation**: Creates deployment structure from existing build artifacts
 3. **Module Import**: Tests import behavior with dependency validation
 4. **Module Structure Validation**: Verifies file existence and content
 5. **Test SVG Content Processing**: Validates test data integrity
+
+## Efficient Testing Approach
+
+The integration tests are designed to be efficient and test what is actually deployed:
+
+- **No Redundant Building**: Tests use existing build artifacts from the CI/CD pipeline instead of rebuilding
+- **Real Deployment Testing**: Creates module layout from the same artifacts that get deployed
+- **CI/CD Optimized**: Minimizes build time by reusing previous build outputs
 
 ## CI/CD Integration
 

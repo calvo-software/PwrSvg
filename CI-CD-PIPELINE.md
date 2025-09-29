@@ -71,7 +71,8 @@ The pipeline includes comprehensive testing at multiple levels:
 
 ### Integration Tests (Pester)
 - **Framework**: Pester (PowerShell testing framework)
-- **Coverage**: Module build, structure validation, import testing, file existence checks, error handling
+- **Coverage**: Module build artifact validation, module layout creation from existing builds, import testing, file existence checks, error handling
+- **Approach**: Tests existing build artifacts rather than rebuilding, ensuring we test what we deploy
 - **Command**: `pwsh -c "Invoke-Pester ./PwrSvg.Integration.Tests.ps1"`
 - **Convenience Script**: `./Run-PesterTests.ps1`
 
