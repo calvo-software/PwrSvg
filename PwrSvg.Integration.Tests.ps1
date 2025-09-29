@@ -64,17 +64,17 @@ Describe "PwrSvg Module Integration Tests" {
     
     Context "Module Import Validation" {
         BeforeAll {
-            $script:DllPath = Join-Path $script:PublishedModulePath "PwrSvg.dll"
+            $script:ManifestPath = Join-Path $script:PublishedModulePath "PwrSvg.psd1"
         }
         
-        It "should be able to import the published module" {
+        It "should be able to import the published module manifest" {
             # Check if module is already loaded from previous PowerShell module import tests
             $loadedModule = Get-Module -Name PwrSvg -ErrorAction SilentlyContinue
             
             if ($null -eq $loadedModule) {
-                # If not loaded, try to import from the published location
+                # If not loaded, try to import from the published location using the manifest
                 try {
-                    Import-Module $script:DllPath -Force -ErrorAction Stop
+                    Import-Module $script:ManifestPath -Force -ErrorAction Stop
                     Write-Host "✅ Module imported successfully" -ForegroundColor Green
                     $true | Should -Be $true -Because "Module should import successfully"
                 } catch {
@@ -97,8 +97,8 @@ Describe "PwrSvg Module Integration Tests" {
                 $pwrSvgCommands | Should -Not -BeNullOrEmpty -Because "Module should export commands"
             } else {
                 # If no commands, validate this is due to dependency issues, not structural problems
-                $dllExists = Test-Path $script:DllPath
-                $dllExists | Should -Be $true -Because "Module DLL should exist even if dependency is missing"
+                $manifestExists = Test-Path $script:ManifestPath
+                $manifestExists | Should -Be $true -Because "Module manifest should exist even if dependency is missing"
                 Write-Host "⚠️ No module commands available (likely due to missing Sixel dependency)" -ForegroundColor Yellow
             }
         }
@@ -106,12 +106,15 @@ Describe "PwrSvg Module Integration Tests" {
     
     Context "Module Structure Validation for $($script:PowerShellEdition)" {
         It "should validate published module files exist" {
+            $manifestPath = Join-Path $script:PublishedModulePath "PwrSvg.psd1"
             $dllPath = Join-Path $script:PublishedModulePath "PwrSvg.dll"
             
             # Validate required files exist in published module
+            $manifestPath | Should -Exist -Because "Module manifest should exist in published module"
             $dllPath | Should -Exist -Because "DLL should exist in published module"
             
             # Validate file sizes are reasonable (not empty)
+            (Get-Item $manifestPath).Length | Should -BeGreaterThan 0 -Because "Manifest should not be empty"
             (Get-Item $dllPath).Length | Should -BeGreaterThan 0 -Because "DLL should not be empty"
         }
         
