@@ -1,7 +1,31 @@
 #!/usr/bin/env pwsh
 
+<#
+.SYNOPSIS
+    DEPRECATED: Traditional integration test for Out-ConsoleSvg function
+.DESCRIPTION  
+    ⚠️ DEPRECATED: This script is deprecated and will be removed in a future version.
+    Please use the new Pester-based integration tests instead:
+    
+    - Run: ./Run-PesterTests.ps1
+    - Or: Invoke-Pester ./PwrSvg.Integration.Tests.ps1
+    
+    This script demonstrates the complete usage of Out-ConsoleSvg but has been
+    replaced with proper Pester tests that provide better structure, reporting,
+    and CI/CD integration.
+.NOTES
+    Use the new Pester tests for better testing experience and modern PowerShell practices.
+#>
+
 # Integration test for Out-ConsoleSvg function
 # This script demonstrates the complete usage of Out-ConsoleSvg
+
+Write-Host "⚠️  DEPRECATION NOTICE ⚠️" -ForegroundColor Yellow
+Write-Host "This integration test script is deprecated." -ForegroundColor Yellow  
+Write-Host "Please use the new Pester-based tests instead:" -ForegroundColor Yellow
+Write-Host "  ./Run-PesterTests.ps1" -ForegroundColor Cyan
+Write-Host "  Invoke-Pester ./PwrSvg.Integration.Tests.ps1" -ForegroundColor Cyan
+Write-Host ""
 
 Write-Host "=== PwrSvg Out-ConsoleSvg Integration Test ===" -ForegroundColor Green
 
