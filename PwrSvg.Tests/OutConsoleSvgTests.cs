@@ -8,14 +8,23 @@ namespace PwrSvg.Tests
     {
         private string GetSourceDirectoryPath()
         {
-            // The working directory during tests is the solution root
-            return System.IO.Directory.GetCurrentDirectory();
+            // Navigate up from test assembly location to find solution root
+            var testAssemblyLocation = typeof(OutConsoleSvgTests).Assembly.Location;
+            var currentDir = System.IO.Path.GetDirectoryName(testAssemblyLocation);
+            
+            // Go up directories until we find the solution file
+            while (currentDir != null && !System.IO.File.Exists(System.IO.Path.Combine(currentDir, "PwrSvg.sln")))
+            {
+                currentDir = System.IO.Path.GetDirectoryName(currentDir);
+            }
+            
+            return currentDir ?? throw new InvalidOperationException("Could not find solution root directory");
         }
         [Fact]
         public void OutConsoleSvg_ManifestShouldContainFunction()
         {
-            // Arrange - look for manifest in source directory  
-            var sourceDir = System.IO.Path.GetDirectoryName(System.IO.Path.GetDirectoryName(System.IO.Path.GetDirectoryName(typeof(ConvertToPngCommand).Assembly.Location)));
+            // Arrange
+            var sourceDir = GetSourceDirectoryPath();
             var manifestPath = System.IO.Path.Combine(sourceDir, "PwrSvg", "PwrSvg.psd1");
             
             // Act
