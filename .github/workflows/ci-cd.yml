@@ -124,6 +124,9 @@ jobs:
         # Copy the unified manifest that uses $PSEdition to select the correct assembly
         Copy-Item "PwrSvg/PwrSvg.psd1" $moduleDir
         
+        # Copy PowerShell script files to the root of the module
+        Copy-Item "PwrSvg/Out-ConsoleSvg.ps1" $moduleDir
+        
         # Update manifest version from release tag
         $manifestPath = "$moduleDir/PwrSvg.psd1"
         (Get-Content $manifestPath) -replace "ModuleVersion = '[^']*'", "ModuleVersion = '$version'" | Set-Content $manifestPath

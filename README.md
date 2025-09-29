@@ -7,7 +7,7 @@ See PwrSvg in action with terminal graphics rendering:
 
 ```powershell
 # Direct SVG string to terminal
-"<svg width='100' height='100'><circle cx='50' cy='50' r='40' fill='#ff6b6b' stroke='#333' stroke-width='3'/></svg>" | ConvertTo-Png |% { ConvertTo-Sixel -stream $_ }
+"<svg width='100' height='100'><circle cx='50' cy='50' r='40' fill='#ff6b6b' stroke='#333' stroke-width='3'/></svg>" | Out-ConsoleSvg
 
 # Or use existing SVG files
 ConvertTo-Png -Path "test.svg" |% { ConvertTo-Sixel -stream $_ }
@@ -20,6 +20,7 @@ ConvertTo-Png -Path "test.svg" |% { ConvertTo-Sixel -stream $_ }
 ### Why PwrSvg?
 
 - **ConvertTo-Png Cmdlet**: Render SVG to PNG in-memory or to disk
+- **Out-ConsoleSvg** — Display SVG directly in console using Sixel graphics
 - **Pipeline-First Design**: Seamlessly integrates with PowerShell pipelines and terminal graphics protocols
 - **Zero File I/O**: Process SVG directly from strings or files to memory streams  
 - **Terminal Graphics**: Perfect companion for `ConvertTo-Sixel` and other terminal image tools
@@ -56,6 +57,20 @@ Get-ChildItem "*.svg" | ForEach-Object {
     ConvertTo-Png -Path $_.FullName -OutFile ($_.BaseName + ".png")
 }
 ```
+
+### Console Output with Sixel Graphics
+```powershell
+# Display SVG directly in console
+"<svg width='100' height='100'><circle cx='50' cy='50' r='40' fill='#ff6b6b'/></svg>" | Out-ConsoleSvg
+
+# Display SVG file in console with custom dimensions
+Get-Content "image.svg" | Out-ConsoleSvg -Width 300 -Height 200
+
+# Display with custom background
+"<svg>...</svg>" | Out-ConsoleSvg -BackgroundColor "White"
+```
+
+**Note:** `Out-ConsoleSvg` replaces the pipeline `ConvertTo-Png | % { ConvertTo-Sixel -Stream $_ }` with a single command.
 
 ### Parameters
 

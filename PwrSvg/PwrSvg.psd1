@@ -10,6 +10,12 @@
     DotNetFrameworkVersion = '4.8'
     CLRVersion = '4.0'
 
+    # Required modules
+    RequiredModules = @('Sixel')
+
+    # Scripts to process on module import
+    ScriptsToProcess = @('Out-ConsoleSvg.ps1')
+
     # Dynamically determine which assembly to load based on PowerShell edition
     # PowerShell Core ($PSEdition -eq 'Core') uses .NET 8 assembly from net8/ subdirectory  
     # Windows PowerShell ($PSEdition -eq 'Desktop' or null) uses .NET Framework 4.8 assembly from net48/ subdirectory
@@ -32,7 +38,7 @@
     CmdletsToExport = @('*')
 
     # Functions to export from this module
-    FunctionsToExport = @()
+    FunctionsToExport = @('Out-ConsoleSvg')
 
     # Variables to export from this module
     VariablesToExport = @()
@@ -44,7 +50,7 @@
     PrivateData = @{
         PSData = @{
             # Tags applied to this module
-            Tags = @('SVG', 'PNG', 'Image', 'Conversion', 'SkiaSharp', 'Graphics', 'Terminal', 'Pipeline')
+            Tags = @('SVG', 'PNG', 'Image', 'Conversion', 'SkiaSharp', 'Graphics', 'Terminal', 'Pipeline', 'Console', 'Sixel')
 
             # A URL to the license for this module
             LicenseUri = 'https://github.com/calvo-software/PwrSvg/blob/main/LICENSE'
@@ -53,7 +59,7 @@
             ProjectUri = 'https://github.com/calvo-software/PwrSvg'
 
             # ReleaseNotes
-            ReleaseNotes = 'Initial release with ConvertTo-Png cmdlet for SVG to PNG conversion.'
+            ReleaseNotes = 'Added Out-ConsoleSvg function for direct SVG to console output using Sixel graphics. Existing ConvertTo-Png cmdlet for SVG to PNG conversion.'
         }
     }
 
