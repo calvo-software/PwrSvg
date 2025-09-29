@@ -33,9 +33,7 @@ function Out-ConsoleSvg {
     Reads an SVG file and displays it in the console with custom dimensions.
     
     .NOTES
-    This function optionally uses the Sixel module for console graphics output. 
-    Install the Sixel module for console display: Install-Module Sixel
-    Without the Sixel module, the function will show a helpful warning message.
+    This function requires the Sixel module, which is automatically loaded as a module dependency.
     #>
     [CmdletBinding()]
     param(
@@ -94,13 +92,7 @@ function Out-ConsoleSvg {
             $pngStream = ConvertTo-Png @convertParams
             
             # Convert PNG stream to Sixel and output to console
-            # Check if ConvertTo-Sixel command is available (from optional Sixel module)
-            if (Get-Command ConvertTo-Sixel -ErrorAction SilentlyContinue) {
-                ConvertTo-Sixel -Stream $pngStream
-            } else {
-                Write-Warning "ConvertTo-Sixel command not found. Please install the Sixel module for console output: Install-Module Sixel"
-                Write-Warning "Alternative: Use 'ConvertTo-Png -Path `"your.svg`" | % { ConvertTo-Sixel -Stream `$_ }' pipeline after installing Sixel module."
-            }
+            ConvertTo-Sixel -Stream $pngStream
             
         } catch {
             Write-Error "Failed to output SVG to console: $_"
