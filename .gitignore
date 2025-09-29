@@ -424,6 +424,11 @@ test*.jpeg
 test*.bmp
 test*.gif
 
+# Pester test result files
+*test-results*.xml
+pester-test-results*.xml
+TestResults.xml
+
 # Publish and package output directories
 publish-test/
 publish-net8/
