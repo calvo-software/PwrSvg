@@ -8,6 +8,13 @@ on:
   release:
     types: [ published ]
 
+# Required permissions for test reporting
+permissions:
+  contents: read
+  actions: read
+  checks: write
+  pull-requests: write
+
 env:
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
   DOTNET_NOLOGO: true
@@ -91,6 +98,36 @@ jobs:
         
         # Test with PowerShell Core (pwsh.exe) - File Output
         pwsh -Command "Import-Module ./publish-net48/PwrSvg.dll -Force; ConvertTo-Png -Path ./test.svg -OutFile ./test-output-net48-pwsh.png -Verbose; if (-not (Test-Path ./test-output-net48-pwsh.png)) { throw 'ConvertTo-Png failed to create output file' }; `$fileSize = (Get-Item ./test-output-net48-pwsh.png).Length; if (`$fileSize -eq 0) { throw 'ConvertTo-Png created empty output file' }; Write-Host '✅ .NET Framework 4.8 (PowerShell Core): ConvertTo-Png successfully created output file (' `$fileSize ' bytes)'"
+
+    - name: Run Pester Integration Tests (.NET Framework 4.8 - Windows PowerShell)
+      if: matrix.os == 'windows-latest'
+      shell: powershell
+      run: ./.github/scripts/Run-PesterCI.ps1 -ModulePath "./publish-net48" -PowerShellEdition ".NET Framework 4.8"
+
+    - name: Run Pester Integration Tests (.NET 8 - PowerShell Core)
+      if: matrix.os != 'windows-latest'
+      shell: pwsh
+      run: ./.github/scripts/Run-PesterCI.ps1 -ModulePath "./publish-net8" -PowerShellEdition ".NET 8"
+
+    - name: Publish Pester Test Results (.NET Framework 4.8)
+      uses: dorny/test-reporter@v1.9.1
+      if: always() && matrix.os == 'windows-latest'  # Always run to show test results on Windows
+      with:
+        name: Pester Integration Tests (.NET Framework 4.8)
+        path: './pester-test-results-net48.xml'
+        reporter: java-junit
+        fail-on-error: false  # Let the previous step handle the failure
+        max-annotations: 10
+
+    - name: Publish Pester Test Results (.NET 8)
+      uses: dorny/test-reporter@v1.9.1
+      if: always() && matrix.os != 'windows-latest'  # Always run to show test results on Unix
+      with:
+        name: Pester Integration Tests (.NET 8)
+        path: './pester-test-results-net8.xml'
+        reporter: java-junit
+        fail-on-error: false  # Let the previous step handle the failure
+        max-annotations: 10
 
   package:
     name: Create Packages
