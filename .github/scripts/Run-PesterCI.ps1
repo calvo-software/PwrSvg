@@ -6,17 +6,16 @@
 .DESCRIPTION
     This script encapsulates the common Pester test execution logic to avoid duplication
     in the GitHub Actions workflow. It handles installation, configuration, execution, 
-    and result reporting for both .NET Framework 4.8 and .NET 8 tests.
-.PARAMETER TargetFramework
-    Target framework for the tests (net48 or net8)
+    and result reporting for PowerShell module tests.
+.PARAMETER ModulePath
+    Path to the published module directory containing the .psd1 manifest file
 .PARAMETER PowerShellEdition
     PowerShell edition name for display purposes
 #>
 
 param(
     [Parameter(Mandatory=$true)]
-    [ValidateSet("net48", "net8")]
-    [string]$TargetFramework,
+    [string]$ModulePath,
     
     [Parameter(Mandatory=$true)]
     [string]$PowerShellEdition
@@ -33,21 +32,22 @@ if (-not (Get-Module -ListAvailable Pester)) {
 $pesterVersion = (Get-Module -ListAvailable Pester | Select-Object -First 1).Version
 Write-Host "Using Pester version: $pesterVersion with $PowerShellEdition ($($PSVersionTable.PSVersion))" -ForegroundColor Green
 
+# Determine output file suffix based on PowerShell edition
+$outputSuffix = if ($PowerShellEdition -like "*Framework*") { "net48" } else { "net8" }
+
 # Configure Pester for xUnit XML output
 $config = New-PesterConfiguration
 $config.TestResult.Enabled = $true
 $config.TestResult.OutputFormat = 'JUnitXml'
-$config.TestResult.OutputPath = "pester-test-results-$TargetFramework.xml"
+$config.TestResult.OutputPath = "pester-test-results-$outputSuffix.xml"
 $config.Run.Path = './PwrSvg.Integration.Tests.ps1'
 $config.Output.Verbosity = 'Detailed'
 
+# Set environment variable for the module path so tests can access it
+$env:PWRSVG_TEST_MODULE_PATH = $ModulePath
+
 # Verify prerequisites before running tests
-$publishPath = "./publish-$TargetFramework"
-if ($TargetFramework -eq "net8") {
-    $publishPath = "./publish-net8"
-} elseif ($TargetFramework -eq "net48") {
-    $publishPath = "./publish-net48"
-}
+$publishPath = $ModulePath
 
 Write-Host "Checking for published module at: $publishPath" -ForegroundColor Yellow
 if (-not (Test-Path $publishPath)) {
@@ -58,7 +58,7 @@ if (-not (Test-Path $publishPath)) {
     
     # Create error report
     $errorXml = "<?xml version=`"1.0`" encoding=`"utf-8`"?><testsuites name=`"Pester`" tests=`"1`" errors=`"1`" failures=`"0`" time=`"0`"><testsuite name=`"Prerequisites`" tests=`"1`" errors=`"1`" failures=`"0`" time=`"0`"><testcase name=`"Published module directory exists`" classname=`"Prerequisites`" time=`"0`"><error message=`"Published module directory not found at $publishPath`"/></testcase></testsuite></testsuites>"
-    $errorXml | Out-File -FilePath "pester-test-results-$TargetFramework.xml" -Encoding UTF8
+    $errorXml | Out-File -FilePath "pester-test-results-$outputSuffix.xml" -Encoding UTF8
     exit 1
 }
 
@@ -76,14 +76,14 @@ try {
     }
     
     # Verify test results file exists
-    if (Test-Path "pester-test-results-$TargetFramework.xml") {
+    if (Test-Path "pester-test-results-$outputSuffix.xml") {
         Write-Host "✅ Test results file generated successfully" -ForegroundColor Green
-        $fileSize = (Get-Item "pester-test-results-$TargetFramework.xml").Length
+        $fileSize = (Get-Item "pester-test-results-$outputSuffix.xml").Length
         Write-Host "File size: $fileSize bytes" -ForegroundColor Yellow
     } else {
         Write-Host "⚠️  Test results file not found, creating fallback results file" -ForegroundColor Yellow
         $fallbackXml = '<?xml version="1.0" encoding="utf-8"?><testsuites name="Pester" tests="0" errors="1" failures="0" time="0"><testsuite name="Pipeline Error" tests="1" errors="1" failures="0" time="0"><testcase name="Test execution failed" classname="Pipeline" time="0"><error message="Pester test execution failed - no results generated"/></testcase></testsuite></testsuites>'
-        $fallbackXml | Out-File -FilePath "pester-test-results-$TargetFramework.xml" -Encoding UTF8
+        $fallbackXml | Out-File -FilePath "pester-test-results-$outputSuffix.xml" -Encoding UTF8
     }
     
     # Exit with failure code if tests failed, but after generating the report
@@ -97,6 +97,6 @@ try {
     # Create error report for test reporter
     $errorMessage = $_.Exception.Message -replace '"', '&quot;'
     $errorXml = "<?xml version=`"1.0`" encoding=`"utf-8`"?><testsuites name=`"Pester`" tests=`"0`" errors=`"1`" failures=`"0`" time=`"0`"><testsuite name=`"Pipeline Error`" tests=`"1`" errors=`"1`" failures=`"0`" time=`"0`"><testcase name=`"Pester execution error`" classname=`"Pipeline`" time=`"0`"><error message=`"$errorMessage`"/></testcase></testsuite></testsuites>"
-    $errorXml | Out-File -FilePath "pester-test-results-$TargetFramework.xml" -Encoding UTF8
+    $errorXml | Out-File -FilePath "pester-test-results-$outputSuffix.xml" -Encoding UTF8
     exit 1
 }

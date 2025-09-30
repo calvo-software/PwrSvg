@@ -19,23 +19,28 @@ BeforeAll {
     
     $script:RepositoryRoot = $PSScriptRoot
     
-    # Detect PowerShell edition and set target framework
-    $script:IsWindowsPowerShell = $PSVersionTable.PSEdition -eq 'Desktop' -or $null -eq $PSVersionTable.PSEdition
-    $script:IsPowerShellCore = $PSVersionTable.PSEdition -eq 'Core'
-    
-    if ($script:IsWindowsPowerShell) {
-        $script:TargetFramework = "net48"
-        $script:PowerShellEdition = "Windows PowerShell (.NET Framework 4.8)"
-        $script:PublishedModulePath = Join-Path $RepositoryRoot "publish-net48"
-        Write-Host "Running on Windows PowerShell - using .NET Framework 4.8 published module" -ForegroundColor Green
+    # Get module path from environment variable (set by CI helper script) or fallback to detection
+    if ($env:PWRSVG_TEST_MODULE_PATH) {
+        $script:PublishedModulePath = $env:PWRSVG_TEST_MODULE_PATH
+        Write-Host "Using module path from environment: $($script:PublishedModulePath)" -ForegroundColor Green
     } else {
-        $script:TargetFramework = "net8.0"
-        $script:PowerShellEdition = "PowerShell Core (.NET 8)"
-        $script:PublishedModulePath = Join-Path $RepositoryRoot "publish-net8"
-        Write-Host "Running on PowerShell Core - using .NET 8 published module" -ForegroundColor Green
+        # Fallback for local development - detect PowerShell edition
+        $script:IsWindowsPowerShell = $PSVersionTable.PSEdition -eq 'Desktop' -or $null -eq $PSVersionTable.PSEdition
+        
+        if ($script:IsWindowsPowerShell) {
+            $script:PublishedModulePath = Join-Path $RepositoryRoot "publish-net48"
+            Write-Host "Local development: Windows PowerShell detected - using publish-net48" -ForegroundColor Yellow
+        } else {
+            $script:PublishedModulePath = Join-Path $RepositoryRoot "publish-net8"
+            Write-Host "Local development: PowerShell Core detected - using publish-net8" -ForegroundColor Yellow
+        }
     }
     
+    # Find the manifest file in the published module directory
+    $script:ManifestPath = Join-Path $script:PublishedModulePath "PwrSvg.psd1"
+    
     Write-Host "Expected published module path: $($script:PublishedModulePath)" -ForegroundColor Yellow
+    Write-Host "Expected manifest path: $($script:ManifestPath)" -ForegroundColor Yellow
     
     # Debug: List available directories for troubleshooting
     Write-Host "Available directories in repository root:" -ForegroundColor Gray
@@ -46,32 +51,18 @@ BeforeAll {
 
 Describe "PwrSvg Module Integration Tests" {
     
-    Context "Published Module Layout for $($script:PowerShellEdition)" {
+    Context "Published Module Layout" {
         It "should have published module directory" {
             $script:PublishedModulePath | Should -Exist -Because "Published module directory should exist after PowerShell module import tests"
         }
         
         It "should have module manifest file" {
-            $manifestPath = Join-Path $script:PublishedModulePath "PwrSvg.psd1"
-            $manifestPath | Should -Exist -Because "Module manifest should exist in published module"
-            (Get-Item $manifestPath).Length | Should -BeGreaterThan 0 -Because "Manifest should not be empty"
-        }
-        
-        It "should validate PowerShell edition compatibility" {
-            $script:PowerShellEdition | Should -Not -BeNullOrEmpty -Because "PowerShell edition should be detected"
-            
-            if ($script:IsWindowsPowerShell) {
-                $script:TargetFramework | Should -Be "net48" -Because "Windows PowerShell should target .NET Framework 4.8"
-            } else {
-                $script:TargetFramework | Should -Be "net8.0" -Because "PowerShell Core should target .NET 8"
-            }
+            $script:ManifestPath | Should -Exist -Because "Module manifest should exist in published module"
+            (Get-Item $script:ManifestPath).Length | Should -BeGreaterThan 0 -Because "Manifest should not be empty"
         }
     }
     
     Context "Module Import and Cmdlet Functionality Validation" {
-        BeforeAll {
-            $script:ManifestPath = Join-Path $script:PublishedModulePath "PwrSvg.psd1"
-        }
         
         It "should be able to import the published module manifest" {
             # Check if module is already loaded from previous PowerShell module import tests

@@ -102,12 +102,12 @@ jobs:
     - name: Run Pester Integration Tests (.NET Framework 4.8 - Windows PowerShell)
       if: matrix.os == 'windows-latest'
       shell: powershell
-      run: ./.github/scripts/Run-PesterCI.ps1 -TargetFramework "net48" -PowerShellEdition ".NET Framework 4.8"
+      run: ./.github/scripts/Run-PesterCI.ps1 -ModulePath "./publish-net48" -PowerShellEdition ".NET Framework 4.8"
 
     - name: Run Pester Integration Tests (.NET 8 - PowerShell Core)
       if: matrix.os != 'windows-latest'
       shell: pwsh
-      run: ./.github/scripts/Run-PesterCI.ps1 -TargetFramework "net8" -PowerShellEdition ".NET 8"
+      run: ./.github/scripts/Run-PesterCI.ps1 -ModulePath "./publish-net8" -PowerShellEdition ".NET 8"
 
     - name: Publish Pester Test Results (.NET Framework 4.8)
       uses: dorny/test-reporter@v1.9.1
