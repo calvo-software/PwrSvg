@@ -436,3 +436,7 @@ publish-net48/
 package/
 PowerShellGallery/
 TestPublish/
+
+# Module layout and Pester results
+artifacts/
+pester-results-*.xml

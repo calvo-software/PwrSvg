@@ -1,103 +1,54 @@
 # PwrSvg Integration Tests
 
-This directory contains Pester-based integration tests for the PwrSvg PowerShell module.
+`PwrSvg.Integration.Tests.ps1` holds Pester tests that import the module from
+the same layout that is published to the PowerShell Gallery and exercise its
+commands.
 
-## Overview
+## The module layout
 
-The integration tests validate the complete module lifecycle including:
+`build/New-ModuleLayout.ps1` builds `artifacts/PwrSvg`:
 
-- **Module Build Artifacts**: Verifies that existing build outputs for the target framework are present and valid
-- **Module Layout Creation**: Creates proper deployment structure from existing build artifacts rather than rebuilding
-- **Module Import**: Tests module import behavior and dependency handling  
-- **Content Validation**: Verifies manifest content and script definitions
-- **PowerShell Edition Compatibility**: Tests framework-specific behavior for both Windows PowerShell (.NET Framework 4.8) and PowerShell Core (.NET 8)
-
-## Multi-Edition Testing Approach
-
-The integration tests automatically detect the PowerShell edition and test the appropriate target framework:
-
-- **Windows PowerShell** (Desktop edition): Tests .NET Framework 4.8 build artifacts
-- **PowerShell Core**: Tests .NET 8 build artifacts
-
-This ensures compatibility across both PowerShell editions and their respective .NET runtimes.
-
-## Running Tests
-
-### Using the Convenience Script (Recommended)
-
-```powershell
-# Run with detailed output
-./Run-PesterTests.ps1
-
-# Run with normal output
-./Run-PesterTests.ps1 -OutputFormat Normal
-
-# Generate JUnit XML report for CI/CD integration
-./Run-PesterTests.ps1 -TestResultFormat JUnitXml -OutputPath "test-results.xml"
-
-# Get test results object
-$results = ./Run-PesterTests.ps1 -PassThru
+```
+artifacts/PwrSvg/
+  PwrSvg.psd1
+  Out-ConsoleSvg.ps1
+  net8/     PwrSvg.dll for PowerShell 7
+  net48/    PwrSvg.dll for Windows PowerShell (built on Windows only)
 ```
 
-### Direct Pester Invocation
+The manifest loads the assembly for the PowerShell that imports it, so the
+tests take only the module path and run unchanged under Windows PowerShell and
+PowerShell 7. CI tests this layout, and the release packages the same one.
+
+## Running the tests
 
 ```powershell
-# Install Pester if needed
-Install-Module -Name Pester -Force -SkipPublisherCheck
-
-# Run tests with modern Pester v5 configuration
-$config = New-PesterConfiguration
-$config.Run.Path = './PwrSvg.Integration.Tests.ps1'
-$config.Output.Verbosity = 'Detailed'
-$config.TestResult.Enabled = $true
-$config.TestResult.OutputFormat = 'JUnitXml'
-$config.TestResult.OutputPath = 'test-results.xml'
-Invoke-Pester -Configuration $config
+Install-Module Sixel -Scope CurrentUser   # required by the module
+./integration-test.ps1                    # build the layout, then test it
+./integration-test.ps1 -SkipBuild         # test the existing layout
 ```
 
-## Test Structure
+Run it from `powershell` to test the net48 assembly and from `pwsh` to test
+the net8 one.
 
-The tests are organized into the following contexts:
+## What is tested
 
-1. **Module Build Artifacts**: Tests presence and validity of existing build outputs
-2. **Module Layout Creation**: Creates deployment structure from existing build artifacts
-3. **Module Import**: Tests import behavior with dependency validation
-4. **Module Structure Validation**: Verifies file existence and content
-5. **Test SVG Content Processing**: Validates test data integrity
+- The module loads from the layout under test and exposes `ConvertTo-Png`
+  and `Out-ConsoleSvg`.
+- `ConvertTo-Png` renders a file and pipeline markup to a PNG stream, writes a
+  PNG file with `-OutFile`, and honours `-Width` and `-Height`.
+- `Out-ConsoleSvg` emits Sixel output.
 
-## Efficient Testing Approach
+## CI
 
-The integration tests are designed to be efficient and test what is actually deployed:
-
-- **No Redundant Building**: Tests use existing build artifacts from the CI/CD pipeline instead of rebuilding
-- **Real Deployment Testing**: Creates module layout from the same artifacts that get deployed
-- **CI/CD Optimized**: Minimizes build time by reusing previous build outputs
-
-## CI/CD Integration
-
-These tests are automatically run in the GitHub Actions pipeline on all supported platforms. The tests are designed to work in CI environments where dependencies like the Sixel module may not be available.
-
-### Test Reporting
-
-The integration tests generate JUnit XML reports that are automatically processed by GitHub Actions using the `dorny/test-reporter` action. This provides:
-
-- ✅ Visual test result summaries in the GitHub Actions UI
-- ✅ Per-test pass/fail status with detailed error messages
-- ✅ Integration with GitHub's check runs and pull request status
-- ✅ Standardized test reporting format compatible with most CI/CD systems
-
-## Replacing Traditional Integration Tests
-
-These Pester tests replace the traditional `integration-test.ps1` script, providing:
-
-- ✅ Structured test organization with clear pass/fail results
-- ✅ Better error reporting and diagnostics
-- ✅ Integration with modern PowerShell testing practices
-- ✅ Improved CI/CD pipeline integration
-- ✅ Easier local development and debugging
+`.github/scripts/Run-PesterCI.ps1 -ModulePath <layout>` runs the tests and
+writes JUnit XML to `pester-results-<edition>.xml`, which
+`dorny/test-reporter` shows on the run. On Windows the tests run under both
+Windows PowerShell and PowerShell 7; on Linux and macOS under PowerShell 7.
 
 ## Requirements
 
-- PowerShell 5.1+ or PowerShell Core 7+
-- Pester module (automatically installed if needed)
-- .NET SDK 8.0+ for building the module
+- Windows PowerShell 5.1 or PowerShell 7
+- Pester 5 (installed by the runner if missing)
+- The Sixel module
+- .NET SDK 8.0 or later to build the layout
