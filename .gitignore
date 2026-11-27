@@ -424,6 +424,11 @@ test*.jpeg
 test*.bmp
 test*.gif
 
+# Pester test result files
+*test-results*.xml
+pester-test-results*.xml
+TestResults.xml
+
 # Publish and package output directories
 publish-test/
 publish-net8/
@@ -431,3 +436,7 @@ publish-net48/
 package/
 PowerShellGallery/
 TestPublish/
+
+# Module layout and Pester results
+artifacts/
+pester-results-*.xml

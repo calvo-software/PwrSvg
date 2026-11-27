@@ -27,4 +27,8 @@
     <PackageReference Include="PowerShellStandard.Library" />
   </ItemGroup>
 
+  <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
+    <PackageReference Include="System.Memory" />
+  </ItemGroup>
+
 </Project>
