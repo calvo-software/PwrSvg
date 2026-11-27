@@ -66,4 +66,6 @@ jobs:
         if (-not $env:PSGALLERY_API_KEY) {
           throw 'The POWERSHELL_GALLERY_API_KEY secret is not set.'
         }
+        # Publish-PSResource runs Test-ModuleManifest, which needs RequiredModules installed.
+        Install-PSResource -Name Sixel -Repository PSGallery -TrustRepository -Scope CurrentUser
         Publish-PSResource -Path ./artifacts/PwrSvg -Repository PSGallery -ApiKey $env:PSGALLERY_API_KEY -Verbose
