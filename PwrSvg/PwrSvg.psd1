@@ -15,29 +15,11 @@
         @{ ModuleName = 'Sixel'; ModuleVersion = '0.6.1' }
     )
 
-    # Scripts to process on module import
-    ScriptsToProcess = @('Out-ConsoleSvg.ps1')
-
-    # Dynamically determine which assembly to load based on PowerShell edition
-    # PowerShell Core ($PSEdition -eq 'Core') uses .NET 8 assembly from net8/ subdirectory  
-    # Windows PowerShell ($PSEdition -eq 'Desktop' or null) uses .NET Framework 4.8 assembly from net48/ subdirectory
-    RootModule = if ($PSEdition -eq 'Core') {
-        Join-Path $PSScriptRoot 'net8\PwrSvg.dll'
-    } else {
-        Join-Path $PSScriptRoot 'net48\PwrSvg.dll'
-    }
-
-    # Also load as required assembly for dependency resolution
-    RequiredAssemblies = @(
-        if ($PSEdition -eq 'Core') {
-            Join-Path $PSScriptRoot 'net8\PwrSvg.dll'
-        } else {
-            Join-Path $PSScriptRoot 'net48\PwrSvg.dll'
-        }
-    )
+    # PwrSvg.psm1 loads net8/PwrSvg.dll in PowerShell 7 and net48/PwrSvg.dll in Windows PowerShell
+    RootModule = 'PwrSvg.psm1'
 
     # Cmdlets to export from this module
-    CmdletsToExport = @('*')
+    CmdletsToExport = @('ConvertTo-Png')
 
     # Functions to export from this module
     FunctionsToExport = @('Out-ConsoleSvg')

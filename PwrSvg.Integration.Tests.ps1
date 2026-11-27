@@ -46,6 +46,12 @@ Describe 'PwrSvg module' {
     It 'defines the Out-ConsoleSvg function' {
         (Get-Command Out-ConsoleSvg).CommandType | Should -Be 'Function'
     }
+
+    It 'has a static manifest that the PowerShell Gallery tooling can read' {
+        $manifest = Import-PowerShellDataFile (Join-Path $script:ModuleBase 'PwrSvg.psd1')
+
+        $manifest.RootModule | Should -Be 'PwrSvg.psm1'
+    }
 }
 
 Describe 'ConvertTo-Png' {

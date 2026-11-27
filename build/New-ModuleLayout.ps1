@@ -46,6 +46,7 @@ foreach ($framework in $frameworks.Keys) {
 }
 
 Copy-Item (Join-Path $sourceDir 'PwrSvg.psd1') $moduleDir
+Copy-Item (Join-Path $sourceDir 'PwrSvg.psm1') $moduleDir
 Copy-Item (Join-Path $sourceDir 'Out-ConsoleSvg.ps1') $moduleDir
 
 Get-Item $moduleDir
