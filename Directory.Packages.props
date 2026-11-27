@@ -4,6 +4,9 @@
     <PackageVersion Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="2.88.8" />
     <PackageVersion Include="Svg.Skia" Version="1.0.0.18" />
     <PackageVersion Include="PowerShellStandard.Library" Version="5.1.1" />
+    <!-- Same version the Sixel module ships for net472: Windows PowerShell hands
+         every module the first copy loaded, and ImageSharp needs 5.0 or later. -->
+    <PackageVersion Include="System.Runtime.CompilerServices.Unsafe" Version="6.1.2" />
     <!-- Test packages -->
     <PackageVersion Include="coverlet.collector" Version="6.0.0" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
