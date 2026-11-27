@@ -1,6 +1,6 @@
 @{
     # Module manifest for PwrSvg
-    ModuleVersion = '1.0.5' # x-release-please-version
+    ModuleVersion = '1.0.6' # x-release-please-version
     GUID = 'c23a160d-a648-41bd-963f-d42c67483018'
     Author = 'Oscar Calvo'
     CompanyName = 'shoji-labs'
