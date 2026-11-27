@@ -4,7 +4,7 @@
     GUID = 'c23a160d-a648-41bd-963f-d42c67483018'
     Author = 'Oscar Calvo'
     CompanyName = 'shoji-labs'
-    Copyright = '(c) 2025 calvo-software. All rights reserved.'
+    Copyright = '(c) 2025 shoji-labs. All rights reserved.'
     Description = 'PowerShell module for rendering SVG files to raw image buffers using SkiaSharp, optimized for terminal and pipeline integration.'
     PowerShellVersion = '5.1'
     DotNetFrameworkVersion = '4.8'
