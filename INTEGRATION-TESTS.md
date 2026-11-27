@@ -11,12 +11,13 @@ commands.
 ```
 artifacts/PwrSvg/
   PwrSvg.psd1
+  PwrSvg.psm1      loads the assembly for the running PowerShell
   Out-ConsoleSvg.ps1
   net8/     PwrSvg.dll for PowerShell 7
   net48/    PwrSvg.dll for Windows PowerShell (built on Windows only)
 ```
 
-The manifest loads the assembly for the PowerShell that imports it, so the
+PwrSvg.psm1 loads the assembly for the PowerShell that imports it, so the
 tests take only the module path and run unchanged under Windows PowerShell and
 PowerShell 7. CI tests this layout, and the release packages the same one.
 
