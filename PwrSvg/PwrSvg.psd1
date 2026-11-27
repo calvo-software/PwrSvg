@@ -1,6 +1,6 @@
 @{
     # Module manifest for PwrSvg
-    ModuleVersion = '1.0.4'
+    ModuleVersion = '1.0.4' # x-release-please-version
     GUID = 'c23a160d-a648-41bd-963f-d42c67483018'
     Author = 'Oscar Calvo'
     CompanyName = 'calvo-software'

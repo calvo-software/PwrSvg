@@ -5,8 +5,6 @@ on:
     branches: [ main, develop ]
   pull_request:
     branches: [ main ]
-  release:
-    types: [ published ]
 
 # Required permissions for test reporting
 permissions:
@@ -84,92 +82,3 @@ jobs:
         fail-on-error: false
         fail-on-empty: false
         max-annotations: 10
-
-  package:
-    name: Create Packages
-    needs: test
-    runs-on: windows-latest
-    if: github.event_name == 'release'
-    
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: '8.0.x'
-    
-    - name: Restore dependencies
-      run: dotnet restore ${{ env.SOLUTION_FILE }}
-      
-    - name: Create Unified PowerShell Gallery Package Structure
-      shell: pwsh  
-      run: |
-        $version = '${{ github.event.release.tag_name }}' -replace '^v', ''
-        
-        # Create unified module package structure with subdirectories for each .NET version
-        # This allows a single .psd1 manifest to dynamically load the correct assembly
-        $moduleDir = "./PowerShellGallery/PwrSvg"
-        New-Item -ItemType Directory -Path $moduleDir -Force
-        New-Item -ItemType Directory -Path "$moduleDir/net8" -Force  
-        New-Item -ItemType Directory -Path "$moduleDir/net48" -Force
-        
-        # Copy the unified manifest that uses $PSEdition to select the correct assembly
-        Copy-Item "PwrSvg/PwrSvg.psd1" $moduleDir
-        
-        # Copy PowerShell script files to the root of the module
-        Copy-Item "PwrSvg/Out-ConsoleSvg.ps1" $moduleDir
-        
-        # Update manifest version from release tag
-        $manifestPath = "$moduleDir/PwrSvg.psd1"
-        (Get-Content $manifestPath) -replace "ModuleVersion = '[^']*'", "ModuleVersion = '$version'" | Set-Content $manifestPath
-        
-    - name: Build and Publish .NET 8.0 Directly to Package
-      run: |
-        dotnet publish PwrSvg/PwrSvg.csproj -c Release -f net8.0 -o ./PowerShellGallery/PwrSvg/net8
-      shell: pwsh
-      
-    - name: Build and Publish .NET Framework 4.8 Directly to Package
-      run: |
-        dotnet publish PwrSvg/PwrSvg.csproj -c Release -f net48 -o ./PowerShellGallery/PwrSvg/net48
-      shell: pwsh
-        
-    - name: Upload Unified PowerShell Gallery Package
-      uses: actions/upload-artifact@v4
-      with:
-        name: PwrSvg-PSGallery
-        path: ./PowerShellGallery/
-
-  publish:
-    name: Publish to PowerShell Gallery
-    needs: package
-    runs-on: windows-latest
-    if: github.event_name == 'release'
-    
-    steps:
-    - name: Download PowerShell Gallery Package
-      uses: actions/download-artifact@v4
-      with:
-        name: PwrSvg-PSGallery
-        path: ./
-        
-    - name: Publish to PowerShell Gallery
-      shell: pwsh
-      run: |
-        $apiKey = "${{ secrets.POWERSHELL_GALLERY_API_KEY }}"
-        if ([string]::IsNullOrEmpty($apiKey)) {
-          Write-Error "PowerShell Gallery API key not found in secrets. Please add POWERSHELL_GALLERY_API_KEY to repository secrets."
-          exit 1
-        }
-        
-        # Install required modules
-        Install-Module -Name PowerShellGet -Force -AllowClobber -Scope CurrentUser
-        
-        # Publish module
-        try {
-          Publish-Module -Path "./PwrSvg" -NuGetApiKey $apiKey -Verbose -Force
-          Write-Host "✅ Successfully published PwrSvg module to PowerShell Gallery"
-        } catch {
-          Write-Error "❌ Failed to publish to PowerShell Gallery: $_"
-          exit 1
-        }
