@@ -1,6 +1,6 @@
 @{
     # Module manifest for PwrSvg
-    ModuleVersion = '1.0.2'
+    ModuleVersion = '1.0.4'
     GUID = 'c23a160d-a648-41bd-963f-d42c67483018'
     Author = 'Oscar Calvo'
     CompanyName = 'calvo-software'
@@ -11,7 +11,9 @@
     CLRVersion = '4.0'
 
     # Required modules
-    RequiredModules = @('Sixel')
+    RequiredModules = @(
+        @{ ModuleName = 'Sixel'; ModuleVersion = '0.6.1' }
+    )
 
     # Scripts to process on module import
     ScriptsToProcess = @('Out-ConsoleSvg.ps1')
@@ -24,8 +26,8 @@
     } else {
         Join-Path $PSScriptRoot 'net48\PwrSvg.dll'
     }
-    
-    # Also load as required assembly for dependency resolution  
+
+    # Also load as required assembly for dependency resolution
     RequiredAssemblies = @(
         if ($PSEdition -eq 'Core') {
             Join-Path $PSScriptRoot 'net8\PwrSvg.dll'
