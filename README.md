@@ -104,7 +104,7 @@ If you prefer to build from source instead of using the published module:
 ### Method 1: .NET 8.0 (Recommended)
 ```powershell
 # Clone and build
-git clone https://github.com/calvo-software/PwrSvg.git
+git clone https://github.com/shoji-labs/PwrSvg.git
 cd PwrSvg/PwrSvg
 dotnet publish -c Release -f net8.0 -o bin/Publish
 

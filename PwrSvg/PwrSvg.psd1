@@ -55,10 +55,10 @@
             Tags = @('SVG', 'PNG', 'Image', 'Conversion', 'SkiaSharp', 'Graphics', 'Terminal', 'Pipeline', 'Console', 'Sixel')
 
             # A URL to the license for this module
-            LicenseUri = 'https://github.com/calvo-software/PwrSvg/blob/main/LICENSE'
+            LicenseUri = 'https://github.com/shoji-labs/PwrSvg/blob/main/LICENSE'
 
             # A URL to the main website for this project
-            ProjectUri = 'https://github.com/calvo-software/PwrSvg'
+            ProjectUri = 'https://github.com/shoji-labs/PwrSvg'
 
             # ReleaseNotes
             ReleaseNotes = 'Added Out-ConsoleSvg function for direct SVG to console output using Sixel graphics. Existing ConvertTo-Png cmdlet for SVG to PNG conversion.'
@@ -66,5 +66,5 @@
     }
 
     # Help file
-    HelpInfoURI = 'https://github.com/calvo-software/PwrSvg'
+    HelpInfoURI = 'https://github.com/shoji-labs/PwrSvg'
 }
