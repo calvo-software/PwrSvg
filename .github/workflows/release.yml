@@ -1,0 +1,70 @@
+name: Release
+
+# The release-please chain lives in the shared shoji-labs/infrastructure
+# workflow: open or update the release PR, test its branch on Windows and
+# Linux, squash-merge it, then tag and create the GitHub release, in one run
+# with GITHUB_TOKEN only.
+#
+# That release is made with GITHUB_TOKEN, so it starts no other workflow. The
+# publish job below runs in the same run instead: it publishes when main holds
+# a released version that the PowerShell Gallery does not have yet.
+
+on:
+  push:
+    branches: [ main ]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release:
+    uses: shoji-labs/infrastructure/.github/workflows/dotnet-release.yml@main
+
+  publish:
+    name: Publish to PowerShell Gallery
+    needs: release
+    runs-on: windows-latest
+    permissions:
+      contents: read
+    steps:
+    # main, not the triggering commit: the release job may have merged the
+    # release PR during this run.
+    - uses: actions/checkout@v4
+      with:
+        ref: main
+        fetch-depth: 0
+
+    - name: Find the version to publish
+      id: version
+      shell: pwsh
+      run: |
+        $version = (Get-Content .release-please-manifest.json -Raw | ConvertFrom-Json).'.'
+        $tagged = [bool](git tag --list "v$version")
+        $published = Find-Module -Name PwrSvg -RequiredVersion $version -ErrorAction SilentlyContinue
+        $publish = $tagged -and -not $published
+        "Manifest version $version, tagged: $tagged, on the Gallery: $([bool]$published), publish: $publish"
+        "version=$version" >> $env:GITHUB_OUTPUT
+        "publish=$($publish.ToString().ToLower())" >> $env:GITHUB_OUTPUT
+
+    - uses: actions/setup-dotnet@v4
+      if: steps.version.outputs.publish == 'true'
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Build module layout
+      if: steps.version.outputs.publish == 'true'
+      shell: pwsh
+      run: ./build/New-ModuleLayout.ps1 -OutputPath ./artifacts
+
+    - name: Publish
+      if: steps.version.outputs.publish == 'true'
+      shell: pwsh
+      env:
+        PSGALLERY_API_KEY: ${{ secrets.POWERSHELL_GALLERY_API_KEY }}
+      run: |
+        if (-not $env:PSGALLERY_API_KEY) {
+          throw 'The POWERSHELL_GALLERY_API_KEY secret is not set.'
+        }
+        Install-Module -Name Sixel -Scope CurrentUser -Force
+        Publish-Module -Path ./artifacts/PwrSvg -NuGetApiKey $env:PSGALLERY_API_KEY -Verbose

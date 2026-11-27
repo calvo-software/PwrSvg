@@ -1,6 +1,6 @@
 # CI/CD Pipeline Documentation
 
-This repository includes a CI/CD pipeline that builds, tests, and publishes the PwrSvg PowerShell module.
+This repository has two GitHub Actions workflows: `ci-cd.yml` builds and tests every push and pull request, and `release.yml` releases and publishes the PwrSvg PowerShell module.
 
 ## Pipeline Overview
 
@@ -18,45 +18,24 @@ The CI/CD pipeline is configured with GitHub Actions and includes the following 
 - Build the module layout with `build/New-ModuleLayout.ps1`
 - Run the Pester integration tests against that layout: under PowerShell 7 everywhere, and also under Windows PowerShell on Windows
 
-### 2. Create Packages (`package` job)
-- **Triggers**: Release published
-- **Platform**: Windows (required for .NET Framework 4.8 builds)
+### 2. Release (`release.yml`)
+- **Triggers**: Push to `main`
 
-**Steps:**
-- Build and publish both .NET 8.0 and .NET Framework 4.8 versions
-- Update module manifest version from release tag
-- Create PowerShell Gallery compatible package structure
-- Upload build artifacts
+Releases are made by [release-please](https://github.com/googleapis/release-please) through the shared release chain in `shoji-labs/infrastructure`. In one run it:
 
-### 3. Publish to PowerShell Gallery (`publish` job)
-- **Triggers**: Release published
-- **Platform**: Windows
+1. opens or updates the release PR, which bumps `ModuleVersion` in `PwrSvg/PwrSvg.psd1` and `.release-please-manifest.json` and updates `CHANGELOG.md`;
+2. builds and tests the release PR's branch on Windows and Linux;
+3. squash-merges the release PR;
+4. creates the `vX.Y.Z` tag and the GitHub release.
 
-**Steps:**
-- Download packaged module
-- Publish to PowerShell Gallery using `POWERSHELL_GALLERY_API_KEY` secret
+The `publish` job then builds the module layout with `build/New-ModuleLayout.ps1` on Windows and publishes it to the PowerShell Gallery when the version on `main` is tagged and not on the Gallery yet.
+
+Versions come from the PR titles merged into `main`, which must follow [Conventional Commits](https://www.conventionalcommits.org/): `fix:` bumps the patch version, `feat:` the minor version, and `feat!:` or a `BREAKING CHANGE:` footer the major version. `docs:`, `test:`, `ci:` and `chore:` do not release.
 
 ## Setup Requirements
 
-### Repository Secrets
-
-Add the following secret to your GitHub repository:
-
-- `POWERSHELL_GALLERY_API_KEY`: Your PowerShell Gallery API key
-  - Get this from [PowerShell Gallery](https://www.powershellgallery.com/account/apikeys)
-
-### Creating a Release
-
-To trigger the packaging and publishing pipeline:
-
-1. Create a new tag: `git tag v1.0.0`
-2. Push the tag: `git push origin v1.0.0`
-3. Create a release from the tag on GitHub
-
-The pipeline will:
-- Build packages for both .NET 8.0 and .NET Framework 4.8
-- Update the module version to match the release tag
-- Publish to PowerShell Gallery
+- Repository secret `POWERSHELL_GALLERY_API_KEY`: a PowerShell Gallery API key with push rights for PwrSvg.
+- Actions must be allowed to create and approve pull requests (repository or organization setting), so the release chain can open and merge the release PR.
 
 ## Test Coverage
 
