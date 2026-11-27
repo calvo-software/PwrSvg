@@ -51,17 +51,20 @@ namespace PwrSvg.Tests
         }
         
         [Fact]
-        public void OutConsoleSvg_ManifestShouldHaveScriptsToProcess()
+        public void OutConsoleSvg_RootModuleShouldLoadScript()
         {
             // Arrange
             var sourceDir = GetSourceDirectoryPath();
             var manifestPath = System.IO.Path.Combine(sourceDir, "PwrSvg", "PwrSvg.psd1");
-            
+            var rootModulePath = System.IO.Path.Combine(sourceDir, "PwrSvg", "PwrSvg.psm1");
+
             // Act
             var manifestContent = System.IO.File.ReadAllText(manifestPath);
-            
+            var rootModuleContent = System.IO.File.ReadAllText(rootModulePath);
+
             // Assert
-            Assert.Contains("ScriptsToProcess = @('Out-ConsoleSvg.ps1')", manifestContent);
+            Assert.Contains("RootModule = 'PwrSvg.psm1'", manifestContent);
+            Assert.Contains("'Out-ConsoleSvg.ps1'", rootModuleContent);
         }
         
         [Fact]
